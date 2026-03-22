@@ -4,12 +4,110 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>STR Monitoring System</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#b45309">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="STR System">
 <style>
+  /* ── SMOOTH TRANSITIONS ── */
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  .container {
+    background: #fff;
+    border-radius: 16px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    transition: box-shadow 0.3s;
+  }
+
+  /* Buttons — snappier feel */
+  button { transition: all 0.18s ease; }
+  button:active { transform: scale(0.96); }
+
+  /* Modals — fade + scale in */
+  .compile-overlay { transition: opacity 0.2s ease; opacity: 0; pointer-events: none; }
+  .compile-overlay.visible { opacity: 1; pointer-events: all; }
+  .compile-modal {
+    transform: scale(0.95) translateY(10px);
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    opacity: 0;
+  }
+  .compile-overlay.visible .compile-modal { transform: scale(1) translateY(0); opacity: 1; }
+
+  /* Picker modal */
+  .picker-overlay { transition: opacity 0.2s ease; opacity: 0; pointer-events: none; }
+  .picker-overlay.visible { opacity: 1; pointer-events: all; }
+  .picker-modal {
+    transform: scale(0.95) translateY(10px);
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    opacity: 0;
+  }
+  .picker-overlay.visible .picker-modal { transform: scale(1) translateY(0); opacity: 1; }
+
+  /* Sidebar — slide in from right */
+  .sidebar {
+    transform: translateX(30px);
+    opacity: 0;
+    transition: transform 0.25s ease, opacity 0.25s ease, width 0.25s ease;
+  }
+  .sidebar.visible { transform: translateX(0); opacity: 1; }
+
+  /* Sidebar backdrop */
+  .sidebar-backdrop { transition: opacity 0.2s ease; }
+
+  /* Item rows — fade in when added */
+  .item-row {
+    animation: rowIn 0.2s ease;
+  }
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Table rows */
+  tbody tr { transition: background 0.15s ease; }
+
+  /* Form inputs */
+  .form-group input, .form-group select {
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+  .form-group input:focus, .form-group select:focus {
+    box-shadow: 0 0 0 3px rgba(180,83,9,0.12);
+  }
+
+  /* PIN dots */
+  .pin-dot { transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease; }
+  .pin-dot.filled { transform: scale(1.15); }
+
+  /* PIN keys */
+  .pin-key { transition: all 0.15s ease; }
+  .pin-key:active { transform: scale(0.92); }
+
+  /* Scroll top btn */
+  #scrollTopBtn { transition: opacity 0.2s ease, transform 0.2s ease; }
+  #scrollTopBtn:hover { transform: translateY(-2px); opacity: 0.85; }
+
+  /* History group header */
+  .history-group-header { transition: background 0.15s ease; }
+
+  /* Product chips */
+  .product-chip { transition: all 0.15s ease; }
+  .product-chip:active { transform: scale(0.95); }
+
+  /* Picker btn */
+  .picker-btn { transition: all 0.15s ease; }
+
+  /* Prod item */
+  .prod-item { transition: background 0.15s ease; }
 
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: linear-gradient(135deg, #1a1200 0%, #2d1f00 50%, #7a4f00 100%);
     min-height: 100vh;
     padding: 30px 20px;
     overflow-x: hidden;
@@ -41,7 +139,7 @@
   }
 
   .header {
-    background: linear-gradient(135deg, #0f3460, #e94560);
+    background: linear-gradient(135deg, #b45309, #f59e0b);
     padding: 28px 32px;
     color: white;
     display: flex;
@@ -95,11 +193,11 @@
 
   .form-group input:focus,
   .form-group select:focus {
-    outline: none; border-color: #0f3460; background: #fff;
+    outline: none; border-color: #b45309; background: #fff;
   }
 
   .section-title {
-    font-size: 14px; font-weight: 700; color: #0f3460;
+    font-size: 14px; font-weight: 700; color: #b45309;
     text-transform: uppercase; letter-spacing: 0.5px;
     margin-bottom: 12px; padding-bottom: 8px;
     border-bottom: 2px solid #f0f0f0;
@@ -111,8 +209,8 @@
     display: grid;
     grid-template-columns: 1fr 100px 100px 140px auto;
     gap: 10px; align-items: center;
-    background: #f8f9ff; padding: 10px 14px;
-    border-radius: 10px; border: 1.5px solid #e8eaf6;
+    background: #fffbeb; padding: 10px 14px;
+    border-radius: 10px; border: 1.5px solid #fde68a;
   }
 
   .item-row select,
@@ -122,7 +220,7 @@
   }
 
   .item-row select:focus,
-  .item-row input:focus { outline: none; border-color: #0f3460; }
+  .item-row input:focus { outline: none; border-color: #b45309; }
 
   .status-badge {
     padding: 5px 12px; border-radius: 20px; font-size: 12px;
@@ -133,15 +231,15 @@
   .btn-row { display: flex; gap: 12px; margin-top: 8px; }
 
   .add-btn {
-    padding: 10px 20px; background: #fff; color: #0f3460;
-    border: 2px solid #0f3460; border-radius: 8px;
+    padding: 10px 20px; background: #fff; color: #b45309;
+    border: 2px solid #b45309; border-radius: 8px;
     font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
   }
-  .add-btn:hover { background: #0f3460; color: #fff; }
+  .add-btn:hover { background: #b45309; color: #fff; }
 
   .generate-btn {
     flex: 1; padding: 12px;
-    background: linear-gradient(135deg, #0f3460, #e94560);
+    background: linear-gradient(135deg, #b45309, #f59e0b);
     color: white; border: none; border-radius: 8px;
     font-size: 15px; font-weight: 700; cursor: pointer;
     letter-spacing: 0.5px; transition: opacity 0.2s;
@@ -158,7 +256,7 @@
 
   .compile-btn {
     padding: 9px 20px;
-    background: #0f3460;
+    background: #b45309;
     color: white;
     border: none;
     border-radius: 8px;
@@ -172,8 +270,8 @@
   .send-history-btn {
     padding: 9px 20px;
     background: #fff;
-    color: #e94560;
-    border: 2px solid #e94560;
+    color: #f59e0b;
+    border: 2px solid #f59e0b;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 600;
@@ -181,20 +279,23 @@
     display: none;
     transition: all 0.2s;
   }
-  .send-history-btn:hover { background: #e94560; color: #fff; }
+  .send-history-btn:hover { background: #f59e0b; color: #fff; }
   .send-history-btn.visible { display: inline-block; }
 
   /* Compiled view overlay */
   .compile-overlay {
-    display: none;
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.5);
     z-index: 100;
     align-items: center;
     justify-content: center;
+    display: flex;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
   }
-  .compile-overlay.visible { display: flex; }
+  .compile-overlay.visible { opacity: 1; pointer-events: all; }
 
   .compile-modal {
     background: #fff;
@@ -209,7 +310,7 @@
   }
 
   .compile-modal-header {
-    background: linear-gradient(135deg, #0f3460, #e94560);
+    background: linear-gradient(135deg, #b45309, #f59e0b);
     padding: 18px 24px;
     color: white;
     display: flex;
@@ -224,8 +325,8 @@
   .compile-group { margin-bottom: 20px; }
 
   .compile-group-title {
-    font-size: 13px; font-weight: 700; color: #0f3460;
-    padding-bottom: 6px; border-bottom: 2px solid #e8eaf6;
+    font-size: 13px; font-weight: 700; color: #b45309;
+    padding-bottom: 6px; border-bottom: 2px solid #fde68a;
     margin-bottom: 8px;
   }
 
@@ -235,7 +336,7 @@
 
   .compile-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .compile-table th {
-    background: #f0f4ff; color: #0f3460;
+    background: #fff8e1; color: #b45309;
     padding: 7px 10px; text-align: left; font-size: 12px;
   }
   .compile-table td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; color: #444; }
@@ -255,7 +356,7 @@
 
   .modal-send-btn {
     padding: 8px 18px;
-    background: linear-gradient(135deg, #0f3460, #e94560);
+    background: linear-gradient(135deg, #b45309, #f59e0b);
     color: white; border: none; border-radius: 7px;
     cursor: pointer; font-size: 13px; font-weight: 600;
   }
@@ -264,7 +365,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #0f3460, #e94560);
+    background: linear-gradient(135deg, #b45309, #f59e0b);
     color: white;
     border: none;
     font-size: 18px;
@@ -314,7 +415,7 @@
 
   table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 820px; }
 
-  thead tr { background: #0f3460; color: white; }
+  thead tr { background: #b45309; color: white; }
   thead th {
     padding: 10px 10px; text-align: left;
     font-weight: 600; font-size: 12px; letter-spacing: 0.3px;
@@ -332,7 +433,7 @@
   .status-select.cancelled{ background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
 
   tbody tr { border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
-  tbody tr:hover { background: #f8f9ff; }
+  tbody tr:hover { background: #fffbeb; }
   tbody td { padding: 9px 10px; color: #444; white-space: nowrap; }
 
   .empty-row td {
@@ -353,27 +454,33 @@
 
   /* ── SIDEBAR ── */
   .sidebar {
-    width: 260px;
+    width: 290px;
     flex-shrink: 0;
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     overflow: hidden;
     max-height: 90vh;
-    display: none;
     flex-direction: column;
     position: sticky;
     top: 30px;
+    display: none;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
   }
-
-  .sidebar.visible { display: flex; }
+  .sidebar.visible {
+    display: flex;
+    opacity: 1;
+    transform: translateX(0);
+  }
 
   @media (max-width: 1100px) {
     .sidebar { width: 220px; }
   }
 
   .sidebar-header {
-    background: linear-gradient(135deg, #0f3460, #e94560);
+    background: linear-gradient(135deg, #b45309, #f59e0b);
     padding: 18px 20px;
     color: white;
     font-size: 14px;
@@ -394,17 +501,17 @@
 
   .history-group {
     margin-bottom: 10px;
-    border: 1.5px solid #e8eaf6;
+    border: 1.5px solid #fde68a;
     border-radius: 10px;
     overflow: hidden;
   }
 
   .history-group-header {
-    background: #f0f4ff;
+    background: #fff8e1;
     padding: 9px 12px;
     font-size: 12px;
     font-weight: 700;
-    color: #0f3460;
+    color: #b45309;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
@@ -412,7 +519,7 @@
     user-select: none;
   }
 
-  .history-group-header:hover { background: #e0e7ff; }
+  .history-group-header:hover { background: #fde68a; }
 
   .history-group-body { display: none; }
   .history-group-body.open { display: block; }
@@ -446,9 +553,9 @@
 
   /* ── PRODUCTS SIDEBAR ── */
   .prod-cat-title {
-    font-size: 11px; font-weight: 700; color: #0f3460;
+    font-size: 11px; font-weight: 700; color: #b45309;
     text-transform: uppercase; letter-spacing: 0.5px;
-    padding: 8px 0 4px; border-bottom: 1.5px solid #e8eaf6;
+    padding: 8px 0 4px; border-bottom: 1.5px solid #fde68a;
     margin-bottom: 6px; margin-top: 10px;
   }
   .prod-cat-title:first-child { margin-top: 0; }
@@ -456,9 +563,9 @@
   .prod-item {
     display: flex; justify-content: space-between; align-items: center;
     padding: 5px 8px; border-radius: 6px; font-size: 12px; color: #333;
-    background: #f8f9ff; margin-bottom: 4px; border: 1px solid #e8eaf6;
+    background: #fffbeb; margin-bottom: 4px; border: 1px solid #fde68a;
   }
-  .prod-item:hover { background: #e0e7ff; }
+  .prod-item:hover { background: #fde68a; }
 
   .prod-del-btn {
     background: none; border: none; cursor: pointer;
@@ -479,10 +586,10 @@
     width: 100%;
   }
   .prod-add-form input:focus,
-  .prod-add-form select:focus { outline: none; border-color: #0f3460; }
+  .prod-add-form select:focus { outline: none; border-color: #b45309; }
 
   .prod-add-btn {
-    padding: 8px; background: linear-gradient(135deg, #0f3460, #e94560);
+    padding: 8px; background: linear-gradient(135deg, #b45309, #f59e0b);
     color: white; border: none; border-radius: 7px;
     font-size: 12px; font-weight: 600; cursor: pointer;
   }
@@ -490,15 +597,18 @@
 
   /* ── PRODUCT PICKER MODAL ── */
   .picker-overlay {
-    display: none;
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.55);
     z-index: 200;
     align-items: center;
     justify-content: center;
+    display: flex;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
   }
-  .picker-overlay.visible { display: flex; }
+  .picker-overlay.visible { opacity: 1; pointer-events: all; }
 
   .picker-modal {
     background: #fff;
@@ -513,7 +623,7 @@
   }
 
   .picker-header {
-    background: linear-gradient(135deg, #0f3460, #e94560);
+    background: linear-gradient(135deg, #b45309, #f59e0b);
     padding: 16px 22px;
     color: white;
     display: flex;
@@ -547,9 +657,9 @@
   .picker-col { display: flex; flex-direction: column; gap: 8px; }
 
   .picker-col-title {
-    font-size: 11px; font-weight: 700; color: #0f3460;
+    font-size: 11px; font-weight: 700; color: #b45309;
     text-transform: uppercase; letter-spacing: 0.6px;
-    padding-bottom: 6px; border-bottom: 2px solid #e8eaf6;
+    padding-bottom: 6px; border-bottom: 2px solid #fde68a;
     margin-bottom: 2px;
   }
 
@@ -557,26 +667,26 @@
 
   .product-chip {
     padding: 6px 12px;
-    background: #f0f4ff;
-    border: 1.5px solid #c7d2fe;
+    background: #fff8e1;
+    border: 1.5px solid #fde68a;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
-    color: #0f3460;
+    color: #b45309;
     cursor: pointer;
     transition: all 0.15s;
     white-space: nowrap;
   }
-  .product-chip:hover { background: #0f3460; color: #fff; border-color: #0f3460; }
+  .product-chip:hover { background: #b45309; color: #fff; border-color: #b45309; }
   .product-chip.hidden { display: none; }
 
   .picker-btn {
     padding: 8px 14px;
-    background: #f0f4ff;
-    border: 1.5px solid #c7d2fe;
+    background: #fff8e1;
+    border: 1.5px solid #fde68a;
     border-radius: 8px;
     font-size: 13px;
-    color: #0f3460;
+    color: #b45309;
     cursor: pointer;
     text-align: left;
     transition: all 0.15s;
@@ -584,8 +694,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .picker-btn:hover { border-color: #0f3460; background: #e0e7ff; }
-  .picker-btn.selected { background: #0f3460; color: #fff; border-color: #0f3460; }
+  .picker-btn:hover { border-color: #b45309; background: #fde68a; }
+  .picker-btn.selected { background: #b45309; color: #fff; border-color: #b45309; }
 
   /* ── RESPONSIVE ── */
 
@@ -677,7 +787,62 @@
     .sidebar { width: 100% !important; }
     .form-body { padding: 12px 12px; }
     .table-section { padding: 0 12px 14px; }
-  }  /* Sidebar overlay backdrop on mobile */
+  }  /* ── PIN LOCK ── */
+  .pin-overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1a1200 0%, #2d1f00 50%, #7a4f00 100%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pin-overlay.hidden { display: none; }
+
+  .pin-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 36px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    width: 300px;
+  }
+
+  .pin-box h2 {
+    font-size: 22px; font-weight: 700; color: #b45309; margin-bottom: 6px;
+  }
+  .pin-box p {
+    font-size: 13px; color: #888; margin-bottom: 24px;
+  }
+
+  .pin-dots {
+    display: flex; justify-content: center; gap: 14px; margin-bottom: 24px;
+  }
+  .pin-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid #fde68a; background: #fff;
+    transition: background 0.15s;
+  }
+  .pin-dot.filled { background: #b45309; border-color: #b45309; }
+
+  .pin-keypad {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .pin-key {
+    padding: 14px; font-size: 18px; font-weight: 700;
+    background: #fff8e1; border: 1.5px solid #fde68a;
+    border-radius: 10px; cursor: pointer; color: #b45309;
+    transition: all 0.15s;
+  }
+  .pin-key:hover { background: #b45309; color: #fff; border-color: #b45309; }
+  .pin-key.del { font-size: 16px; }
+
+  .pin-error {
+    color: #dc2626; font-size: 12px; margin-top: 14px;
+    min-height: 18px; font-weight: 600;
+  }
+
+  /* Sidebar overlay backdrop on mobile */
   .sidebar-backdrop {
     display: none;
     position: fixed;
@@ -690,6 +855,34 @@
 </head>
 <body>
 
+<!-- PIN LOCK -->
+<div class="pin-overlay" id="pinOverlay" style="display:none;">
+  <div class="pin-box">
+    <h2>🔒 STR System</h2>
+    <p>Enter your PIN to continue</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+    </div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key del" onclick="pinClear()">✕</button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key del" onclick="pinBack()">⌫</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+  </div>
+</div>
+
 <div class="app-wrapper">
 
 <div class="container">
@@ -699,6 +892,7 @@
       <h2>📦 STR Monitoring System</h2>
       <p>Stock Transfer Request — Tracking &amp; Management</p>
       <p style="font-size:11px;opacity:0.6;margin-top:6px;">Created for Jeffrey Tayobong</p>
+      <p id="dailyQuote" style="font-size:11px;opacity:0.75;margin-top:8px;font-style:italic;max-width:420px;line-height:1.5;"></p>
     </div>
     <div style="display:flex;gap:8px;">
       <button id="btnProducts" class="toggle-history-btn" onclick="toggleProductsSidebar()">🛒 Products</button>
@@ -778,7 +972,7 @@
         <button class="send-history-btn" id="sendHistoryBtn" onclick="sendToHistory()">📋 Send to History</button>
       </div>
     </div>
-    <div id="strPrintArea" style="overflow-x:auto; border-radius:10px; border:1px solid #e8eaf6;">
+    <div id="strPrintArea" style="overflow-x:auto; border-radius:10px; border:1px solid #fde68a;">
     <table id="strTable">
       <thead>
         <tr>
@@ -802,7 +996,7 @@
     <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
       <button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
       <div style="display:flex;gap:10px;">
-        <button class="compile-btn" style="background:#fff;color:#0f3460;border:2px solid #0f3460;" onclick="printSTRRecords()">🖨️ Print</button>
+        <button class="compile-btn" style="background:#fff;color:#b45309;border:2px solid #b45309;" onclick="printSTRRecords()">🖨️ Print</button>
         <button class="compile-btn" onclick="compileRecords()">📄 Compile</button>
       </div>
     </div>
@@ -878,7 +1072,9 @@
     <div class="compile-modal-body" id="historyViewBody"></div>
     <div class="compile-modal-footer">
       <button class="modal-close-btn" onclick="closeHistoryView()">Close</button>
-      <button class="modal-send-btn" style="background:#0f3460;" onclick="printBatch()">🖨️ Print</button>
+      <button class="modal-close-btn" id="editBatchBtn" onclick="toggleEditBatch()" style="background:#fff8e1;color:#b45309;border:1.5px solid #fde68a;">✏️ Edit</button>
+      <button class="modal-send-btn" id="saveBatchBtn" onclick="saveBatchEdits()" style="display:none;">💾 Save</button>
+      <button class="modal-send-btn" style="background:#b45309;" onclick="printBatch()">🖨️ Print</button>
     </div>
   </div>
 </div>
@@ -929,17 +1125,79 @@
   const db = firebase.firestore();
 
   // ─── STATE ─────────────────────────────────────────────────────────
-  let productItems = [];  // [{id, name, category}] loaded from Firestore
+  let productItems = [];
   let _pickerTargetRow = null;
   const historyBatches = JSON.parse(localStorage.getItem('str_history') || '[]');
 
-  // ─── INIT ──────────────────────────────────────────────────────────
-  document.getElementById("date").valueAsDate = new Date();
-  restoreFormInputs();
-  loadProductsFromFirestore();
-  loadRecordsFromFirestore();
-  renderHistory();
-  addItem();
+  // ─── PIN LOCK ───────────────────────────────────────────────────────
+  let pinInput = '';
+  let correctPin = null;
+
+  async function initPin() {
+    try {
+      const doc = await db.collection('str_config').doc('pin').get();
+      if (doc.exists) {
+        correctPin = doc.data().value;
+      } else {
+        document.getElementById('pinError').textContent = 'PIN not configured. Contact admin.';
+      }
+    } catch(err) {
+      document.getElementById('pinError').textContent = 'Could not load PIN. Check connection.';
+    }
+  }
+
+  function pinPress(digit) {
+    if (pinInput.length >= 3) return;
+    pinInput += digit;
+    updateDots();
+    if (pinInput.length === 3) checkPin();
+  }
+
+  function pinBack() {
+    pinInput = pinInput.slice(0, -1);
+    updateDots();
+    document.getElementById('pinError').textContent = '';
+  }
+
+  function pinClear() {
+    pinInput = '';
+    updateDots();
+    document.getElementById('pinError').textContent = '';
+  }
+
+  function updateDots() {
+    for (let i = 0; i < 3; i++) {
+      document.getElementById('dot' + i).classList.toggle('filled', i < pinInput.length);
+    }
+  }
+
+  function checkPin() {
+    if (pinInput === correctPin) {
+      sessionStorage.setItem('str_unlocked', '1');
+      document.getElementById('pinOverlay').style.display = 'none';
+      initApp();
+    } else {
+      document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
+      setTimeout(() => { pinInput = ''; updateDots(); }, 600);
+    }
+  }
+
+  function initApp() {
+    document.getElementById("date").valueAsDate = new Date();
+    restoreFormInputs();
+    loadProductsFromFirestore();
+    loadRecordsFromFirestore();
+    renderHistory();
+    addItem();
+  }
+
+  // Start by loading PIN then showing lock screen
+  if (sessionStorage.getItem('str_unlocked') === '1') {
+    initApp();
+  } else {
+    document.getElementById('pinOverlay').style.display = 'flex';
+    initPin();
+  }
 
   // ─── PRODUCTS MANAGEMENT (Firestore) ──────────────────────────────
   async function loadProductsFromFirestore() {
@@ -1026,6 +1284,7 @@
     sidebar.classList.toggle("visible");
     document.getElementById("btnProducts").style.display = sidebar.classList.contains("visible") ? "none" : "";
     updateBackdrop();
+    updateSidebarWidths();
   }
 
   // Allow pressing Enter in the product name input
@@ -1148,7 +1407,7 @@
           <td>${qty}</td>
           <td>${unit}</td>
           <td>
-            <select class="status-select" style="background:#f0f4ff;color:#0f3460;border:1px solid #c7d2fe;">
+            <select class="status-select" style="background:#fff8e1;color:#b45309;border:1px solid #fde68a;">
               <option value="">— Select —</option>
               <option value="ROBI" ${remarks==='ROBI'?'selected':''}>ROBI</option>
               <option value="TBR" ${remarks==='TBR'?'selected':''}>TBR</option>
@@ -1206,6 +1465,13 @@
   // ─── HELPERS ───────────────────────────────────────────────────────
   function updateStatus(sel) {
     sel.className = "status-select " + sel.value;
+    const tr = sel.closest("tr");
+    const docId = tr && tr.dataset.docId;
+    if (docId) {
+      db.collection("str_records").doc(docId)
+        .update({ status: sel.value })
+        .catch(err => console.error("Status update failed:", err));
+    }
   }
 
   function deleteRow(btn) {
@@ -1249,11 +1515,11 @@
     const html = '<!DOCTYPE html><html><head><title>STR Records</title>'
       + '<style>'
       + 'body{font-family:Segoe UI,Arial,sans-serif;padding:16px;margin:0}'
-      + 'h3{font-size:13px;color:#0f3460;margin-bottom:10px}'
+      + 'h3{font-size:13px;color:#b45309;margin-bottom:10px}'
       + 'table{width:100%;border-collapse:collapse;font-size:11px}'
-      + 'th{background:#0f3460;color:white;padding:7px 8px;text-align:left}'
+      + 'th{background:#b45309;color:white;padding:7px 8px;text-align:left}'
       + 'td{padding:6px 8px;border-bottom:1px solid #e0e0e0}'
-      + 'tr:nth-child(even) td{background:#f8f9ff}'
+      + 'tr:nth-child(even) td{background:#fffbeb}'
       + '@page{size:portrait;margin:10mm}'
       + '<\/style><\/head><body>'
       + '<h3>STR Records</h3>'
@@ -1279,7 +1545,7 @@
     body.innerHTML = `
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead>
-          <tr style="background:#0f3460;color:white;">
+          <tr style="background:#b45309;color:white;">
             <th style="padding:10px 12px;text-align:left;">STR #</th>
             <th style="padding:10px 12px;text-align:left;">Date</th>
             <th style="padding:10px 12px;text-align:left;">Store</th>
@@ -1388,7 +1654,7 @@
       div.innerHTML = `
         <div class="history-group-header" onclick="viewBatch(${batchIndex})">
           <span>${batch.sentAt}</span>
-          <span>${batch.rows.length} item(s) ▶</span>
+          <span>${batch.rows.length} item(s)</span>
         </div>
       `;
       body.appendChild(div);
@@ -1396,18 +1662,62 @@
   }
 
   let currentViewBatchIndex = null;
+  let batchEditMode = false;
 
   function viewBatch(index) {
     const batch = historyBatches[index];
     currentViewBatchIndex = index;
+    batchEditMode = false;
     document.getElementById("historyViewTitle").textContent = `📋 ${batch.sentAt}`;
+    document.getElementById("editBatchBtn").textContent = '✏️ Edit';
+    document.getElementById("saveBatchBtn").style.display = 'none';
+    renderBatchTable(batch, false);
+    document.getElementById("historyViewOverlay").classList.add("visible");
+  }
 
+  function renderBatchTable(batch, editable) {
     const body = document.getElementById("historyViewBody");
+    const remarkOpts = ['','ROBI','TBR','PT','SAFE KEEP'];
+    const statusOpts = ['pending','returned','paid','cancelled'];
+
+    const rows = batch.rows.map((r, i) => {
+      if (!editable) return `
+        <tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:9px 12px;">${r.strNumber}</td>
+          <td style="padding:9px 12px;">${r.date}</td>
+          <td style="padding:9px 12px;">${r.store}</td>
+          <td style="padding:9px 12px;">${r.product}</td>
+          <td style="padding:9px 12px;">${r.qty}</td>
+          <td style="padding:9px 12px;">${r.unit}</td>
+          <td style="padding:9px 12px;">${r.remarks}</td>
+          <td style="padding:9px 12px;">${r.refNumber}</td>
+          <td style="padding:9px 12px;">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</td>
+        </tr>`;
+
+      const remSel = remarkOpts.map(o => `<option value="${o}" ${r.remarks===o?'selected':''}>${o||'—'}</option>`).join('');
+      const staSel = statusOpts.map(o => `<option value="${o}" ${r.status===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('');
+      const inp = (val, cls) => `<input data-i="${i}" data-f="${cls}" value="${val}" style="width:100%;padding:4px 6px;border:1.5px solid #fde68a;border-radius:6px;font-size:12px;">`;
+      const sel = (opts, cls) => `<select data-i="${i}" data-f="${cls}" style="padding:4px 6px;border:1.5px solid #fde68a;border-radius:6px;font-size:12px;">${opts}</select>`;
+
+      return `
+        <tr style="border-bottom:1px solid #f0f0f0;background:#fffbeb;">
+          <td style="padding:6px 8px;">${inp(r.strNumber,'strNumber')}</td>
+          <td style="padding:6px 8px;">${inp(r.date,'date')}</td>
+          <td style="padding:6px 8px;">${inp(r.store,'store')}</td>
+          <td style="padding:6px 8px;">${inp(r.product,'product')}</td>
+          <td style="padding:6px 8px;">${inp(r.qty,'qty')}</td>
+          <td style="padding:6px 8px;">${inp(r.unit,'unit')}</td>
+          <td style="padding:6px 8px;">${sel(remSel,'remarks')}</td>
+          <td style="padding:6px 8px;">${inp(r.refNumber,'refNumber')}</td>
+          <td style="padding:6px 8px;">${sel(staSel,'status')}</td>
+        </tr>`;
+    }).join('');
+
     body.innerHTML = `
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px;">
           <thead>
-            <tr style="background:#0f3460;color:white;">
+            <tr style="background:#b45309;color:white;">
               <th style="padding:10px 12px;text-align:left;">STR #</th>
               <th style="padding:10px 12px;text-align:left;">Date</th>
               <th style="padding:10px 12px;text-align:left;">Store</th>
@@ -1419,24 +1729,62 @@
               <th style="padding:10px 12px;text-align:left;">Status</th>
             </tr>
           </thead>
-          <tbody>
-            ${batch.rows.map(r => `
-              <tr style="border-bottom:1px solid #f0f0f0;">
-                <td style="padding:9px 12px;">${r.strNumber}</td>
-                <td style="padding:9px 12px;">${r.date}</td>
-                <td style="padding:9px 12px;">${r.store}</td>
-                <td style="padding:9px 12px;">${r.product}</td>
-                <td style="padding:9px 12px;">${r.qty}</td>
-                <td style="padding:9px 12px;">${r.unit}</td>
-                <td style="padding:9px 12px;">${r.remarks}</td>
-                <td style="padding:9px 12px;">${r.refNumber}</td>
-                <td style="padding:9px 12px;">${r.status}</td>
-              </tr>`).join('')}
-          </tbody>
+          <tbody>${rows}</tbody>
         </table>
-      </div>
-    `;
-    document.getElementById("historyViewOverlay").classList.add("visible");
+      </div>`;
+  }
+
+  function toggleEditBatch() {
+    const batch = historyBatches[currentViewBatchIndex];
+    batchEditMode = !batchEditMode;
+    document.getElementById("editBatchBtn").textContent = batchEditMode ? '✕ Cancel' : '✏️ Edit';
+    document.getElementById("saveBatchBtn").style.display = batchEditMode ? 'inline-block' : 'none';
+    renderBatchTable(batch, batchEditMode);
+  }
+
+  async function saveBatchEdits() {
+    const batch = historyBatches[currentViewBatchIndex];
+    const body = document.getElementById("historyViewBody");
+
+    // Read all inputs/selects back into batch.rows
+    body.querySelectorAll('input[data-i], select[data-i]').forEach(el => {
+      const i = parseInt(el.dataset.i);
+      const f = el.dataset.f;
+      batch.rows[i][f] = el.value;
+    });
+
+    // Save to localStorage
+    localStorage.setItem('str_history', JSON.stringify(historyBatches));
+
+    // Update archived Firestore docs for this batch
+    // We match by strNumber+date+product since we don't store docIds in history
+    try {
+      const snap = await db.collection('str_records').get();
+      const archived = snap.docs.filter(d => d.data().archived);
+      // Build a map of updates by matching rows
+      for (const r of batch.rows) {
+        const match = archived.find(d => {
+          const data = d.data();
+          return data.strNumber === r.strNumber && data.product === r.product && data.date === r.date;
+        });
+        if (match) {
+          await db.collection('str_records').doc(match.id).update({
+            strNumber: r.strNumber, date: r.date, store: r.store,
+            product: r.product, qty: r.qty, unit: r.unit,
+            remarks: r.remarks, refNumber: r.refNumber, status: r.status
+          });
+        }
+      }
+    } catch(err) {
+      console.error('Firestore update failed:', err);
+    }
+
+    batchEditMode = false;
+    document.getElementById("editBatchBtn").textContent = '✏️ Edit';
+    document.getElementById("saveBatchBtn").style.display = 'none';
+    renderBatchTable(batch, false);
+    renderHistory();
+    alert('✅ Changes saved.');
   }
 
   function closeHistoryView() {
@@ -1467,11 +1815,11 @@
     const html = '<!DOCTYPE html><html><head><title>STR History</title>'
       + '<style>'
       + 'body{font-family:Segoe UI,Arial,sans-serif;padding:16px;margin:0}'
-      + 'h3{font-size:13px;color:#0f3460;margin-bottom:10px}'
+      + 'h3{font-size:13px;color:#b45309;margin-bottom:10px}'
       + 'table{width:100%;border-collapse:collapse;font-size:11px}'
-      + 'th{background:#0f3460;color:white;padding:7px 8px;text-align:left}'
+      + 'th{background:#b45309;color:white;padding:7px 8px;text-align:left}'
       + 'td{padding:6px 8px;border-bottom:1px solid #e0e0e0}'
-      + 'tr:nth-child(even) td{background:#f8f9ff}'
+      + 'tr:nth-child(even) td{background:#fffbeb}'
       + '@page{size:portrait;margin:10mm}'
       + '<\/style><\/head><body>'
       + '<h3>STR History - ' + batch.sentAt + '</h3>'
@@ -1541,6 +1889,16 @@
     sidebar.classList.toggle("visible");
     document.getElementById("btnHistory").style.display = sidebar.classList.contains("visible") ? "none" : "";
     updateBackdrop();
+    updateSidebarWidths();
+  }
+
+  function updateSidebarWidths() {
+    if (window.innerWidth <= 900) return;
+    const pOpen = document.getElementById("productsSidebar").classList.contains("visible");
+    const hOpen = document.getElementById("historySidebar").classList.contains("visible");
+    const both = pOpen && hOpen;
+    document.getElementById("productsSidebar").style.width = both ? "220px" : "320px";
+    document.getElementById("historySidebar").style.width  = both ? "220px" : "320px";
   }
 
   function updateBackdrop() {
@@ -1555,6 +1913,7 @@
     document.getElementById("sidebarBackdrop").classList.remove("visible");
     document.getElementById("btnProducts").style.display = "";
     document.getElementById("btnHistory").style.display = "";
+    updateSidebarWidths();
   }
 
   // ─── PERSIST FORM INPUTS ───────────────────────────────────────────
@@ -1611,7 +1970,7 @@
           <td>${d.qty || ''}</td>
           <td>${d.unit || ''}</td>
           <td>
-            <select class="status-select" style="background:#f0f4ff;color:#0f3460;border:1px solid #c7d2fe;">
+            <select class="status-select" style="background:#fff8e1;color:#b45309;border:1px solid #fde68a;">
               <option value="">— Select —</option>
               <option value="ROBI" ${d.remarks==='ROBI'?'selected':''}>ROBI</option>
               <option value="TBR" ${d.remarks==='TBR'?'selected':''}>TBR</option>
@@ -1641,6 +2000,53 @@
   }
 
   // ─── SCROLL TO TOP BUTTON ──────────────────────────────────────────
+
+  // ─── SERVICE WORKER ────────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .catch(err => console.log('SW registration failed:', err));
+  }
+
+  // ─── DAILY QUOTE ───────────────────────────────────────────────────
+  (function() {
+    const quotes = [
+      "The secret of getting ahead is getting started.",
+      "Small steps every day lead to big results.",
+      "Work hard in silence, let success make the noise.",
+      "Don't watch the clock; do what it does — keep going.",
+      "The harder you work, the luckier you get.",
+      "Success is not final, failure is not fatal — it's the courage to continue that counts.",
+      "Believe you can and you're halfway there.",
+      "Your only limit is your mind.",
+      "Push yourself, because no one else is going to do it for you.",
+      "Great things never come from comfort zones.",
+      "Dream it. Wish it. Do it.",
+      "Stay focused and never give up.",
+      "It always seems impossible until it's done.",
+      "Do something today that your future self will thank you for.",
+      "Little by little, a little becomes a lot.",
+      "Discipline is the bridge between goals and accomplishment.",
+      "You don't have to be great to start, but you have to start to be great.",
+      "Opportunities don't happen, you create them.",
+      "The best way to predict the future is to create it.",
+      "Success usually comes to those who are too busy to be looking for it.",
+      "Don't stop when you're tired. Stop when you're done.",
+      "Wake up with determination. Go to bed with satisfaction.",
+      "Do what you can with all you have, wherever you are.",
+      "Strive for progress, not perfection.",
+      "The key to success is to focus on goals, not obstacles.",
+      "You are capable of more than you know.",
+      "Every day is a second chance.",
+      "Be the energy you want to attract.",
+      "Start where you are. Use what you have. Do what you can.",
+      "Consistency is what transforms average into excellence.",
+      "Hard work beats talent when talent doesn't work hard."
+    ];
+    const day = new Date().getDate() + new Date().getMonth() * 31;
+    const quote = quotes[day % quotes.length];
+    const el = document.getElementById("dailyQuote");
+    if (el) el.textContent = '💬 ' + quote;
+  })();
 </script>
 
 </body>
