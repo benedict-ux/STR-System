@@ -2,7 +2,7 @@
   "name": "STR Monitoring System",
   "short_name": "STR System",
   "description": "Stock Transfer Request Tracking & Management",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1a1200",
   "theme_color": "#b45309",
