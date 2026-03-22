@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STR Monitoring System</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    padding: 30px 20px;
+    overflow-x: hidden;
+  }
+
+  /* ── LAYOUT WRAPPER ── */
+  .app-wrapper {
+    display: flex;
+    gap: 16px;
+    max-width: 1600px;
+    margin: auto;
+    align-items: flex-start;
+    position: relative;
+  }
+
+  .container {
+    background: #fff;
+    border-radius: 16px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  @media (max-width: 1100px) {
+    .form-body { padding: 20px 18px; }
+    .table-section { padding: 0 18px 24px; }
+    .header { padding: 20px 18px; }
+  }
+
+  .header {
+    background: linear-gradient(135deg, #0f3460, #e94560);
+    padding: 28px 32px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .header-text h2 { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+  .header-text p  { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+
+  .toggle-history-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.4);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .toggle-history-btn:hover { background: rgba(255,255,255,0.25); }
+
+  .form-body { padding: 28px 32px; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-group label {
+    font-size: 12px; font-weight: 600; color: #555;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 10px 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    transition: border-color 0.2s;
+    background: #fafafa;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none; border-color: #0f3460; background: #fff;
+  }
+
+  .section-title {
+    font-size: 14px; font-weight: 700; color: #0f3460;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  #itemsContainer { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 100px 140px auto;
+    gap: 10px; align-items: center;
+    background: #f8f9ff; padding: 10px 14px;
+    border-radius: 10px; border: 1.5px solid #e8eaf6;
+  }
+
+  .item-row select,
+  .item-row input {
+    padding: 8px 12px; border: 1.5px solid #e0e0e0;
+    border-radius: 7px; font-size: 14px; background: #fff;
+  }
+
+  .item-row select:focus,
+  .item-row input:focus { outline: none; border-color: #0f3460; }
+
+  .status-badge {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px;
+    font-weight: 600; background: #fff8e1; color: #f59e0b;
+    border: 1.5px solid #fde68a; white-space: nowrap;
+  }
+
+  .btn-row { display: flex; gap: 12px; margin-top: 8px; }
+
+  .add-btn {
+    padding: 10px 20px; background: #fff; color: #0f3460;
+    border: 2px solid #0f3460; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .add-btn:hover { background: #0f3460; color: #fff; }
+
+  .generate-btn {
+    flex: 1; padding: 12px;
+    background: linear-gradient(135deg, #0f3460, #e94560);
+    color: white; border: none; border-radius: 8px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    letter-spacing: 0.5px; transition: opacity 0.2s;
+  }
+  .generate-btn:hover { opacity: 0.9; }
+
+  .table-section { padding: 0 32px 32px; }
+
+  .table-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .compile-btn {
+    padding: 9px 20px;
+    background: #0f3460;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .compile-btn:hover { opacity: 0.85; }
+
+  .send-history-btn {
+    padding: 9px 20px;
+    background: #fff;
+    color: #e94560;
+    border: 2px solid #e94560;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: none;
+    transition: all 0.2s;
+  }
+  .send-history-btn:hover { background: #e94560; color: #fff; }
+  .send-history-btn.visible { display: inline-block; }
+
+  /* Compiled view overlay */
+  .compile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .compile-overlay.visible { display: flex; }
+
+  .compile-modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 95%;
+    max-width: 1000px;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .compile-modal-header {
+    background: linear-gradient(135deg, #0f3460, #e94560);
+    padding: 18px 24px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .compile-modal-header h3 { font-size: 16px; font-weight: 700; }
+
+  .compile-modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+
+  .compile-group { margin-bottom: 20px; }
+
+  .compile-group-title {
+    font-size: 13px; font-weight: 700; color: #0f3460;
+    padding-bottom: 6px; border-bottom: 2px solid #e8eaf6;
+    margin-bottom: 8px;
+  }
+
+  .compile-group-meta {
+    font-size: 11px; color: #888; margin-bottom: 8px;
+  }
+
+  .compile-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .compile-table th {
+    background: #f0f4ff; color: #0f3460;
+    padding: 7px 10px; text-align: left; font-size: 12px;
+  }
+  .compile-table td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; color: #444; }
+
+  .compile-modal-footer {
+    padding: 14px 24px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .modal-close-btn {
+    padding: 8px 18px; background: #f0f0f0; color: #555;
+    border: none; border-radius: 7px; cursor: pointer; font-size: 13px;
+  }
+
+  .modal-send-btn {
+    padding: 8px 18px;
+    background: linear-gradient(135deg, #0f3460, #e94560);
+    color: white; border: none; border-radius: 7px;
+    cursor: pointer; font-size: 13px; font-weight: 600;
+  }
+
+  #scrollTopBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0f3460, #e94560);
+    color: white;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+  }
+  #scrollTopBtn:hover { opacity: 0.85; }
+
+  @media print {
+    /* STR Records direct print */
+    body * { visibility: hidden; }
+    body { margin: 0 !important; padding: 0 !important; height: auto !important; }
+    body.printing-str #strPrintArea,
+    body.printing-str #strPrintArea * { visibility: visible !important; }
+    body.printing-str #strPrintArea {
+      position: fixed; inset: 0;
+      background: white;
+      padding: 16px;
+      overflow: visible;
+      border: none !important;
+      border-radius: 0 !important;
+    }
+    body.printing-str #strPrintArea table {
+      width: 100% !important;
+      min-width: unset !important;
+      font-size: 10px !important;
+      table-layout: auto !important;
+      border-collapse: collapse;
+    }
+    body.printing-str #strPrintArea th,
+    body.printing-str #strPrintArea td {
+      padding: 6px 8px !important;
+      word-break: break-word;
+      white-space: normal !important;
+      border: 1px solid #ddd;
+    }
+    body.printing-str #strPrintArea td:last-child,
+    body.printing-str #strPrintArea th:last-child { display: none; }
+  }
+
+  @page { size: portrait; margin: 10mm; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 820px; }
+
+  thead tr { background: #0f3460; color: white; }
+  thead th {
+    padding: 10px 10px; text-align: left;
+    font-weight: 600; font-size: 12px; letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .status-select {
+    border: none; border-radius: 20px; padding: 4px 8px;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    appearance: none; -webkit-appearance: none; text-align: left;
+  }
+  .status-select.pending  { background: #fff8e1; color: #f59e0b; border: 1px solid #fde68a; }
+  .status-select.returned { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+  .status-select.paid     { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+  .status-select.cancelled{ background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+
+  tbody tr { border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
+  tbody tr:hover { background: #f8f9ff; }
+  tbody td { padding: 9px 10px; color: #444; white-space: nowrap; }
+
+  .empty-row td {
+    text-align: center; color: #aaa; padding: 30px; font-style: italic;
+  }
+
+  /* Loading state for items dropdown */
+  .loading-text {
+    font-size: 13px; color: #888; font-style: italic; padding: 6px 0;
+  }
+
+  #firebaseStatus {
+    font-size: 12px; padding: 6px 14px; border-radius: 6px;
+    margin-bottom: 16px; display: none;
+  }
+  #firebaseStatus.error { background: #fee2e2; color: #dc2626; display: block; }
+  #firebaseStatus.ok    { background: #dcfce7; color: #16a34a; display: block; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    overflow: hidden;
+    max-height: 90vh;
+    display: none;
+    flex-direction: column;
+    position: sticky;
+    top: 30px;
+  }
+
+  .sidebar.visible { display: flex; }
+
+  @media (max-width: 1100px) {
+    .sidebar { width: 220px; }
+  }
+
+  .sidebar-header {
+    background: linear-gradient(135deg, #0f3460, #e94560);
+    padding: 18px 20px;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .sidebar-header span { font-size: 11px; opacity: 0.8; font-weight: 400; }
+
+  .sidebar-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 12px;
+  }
+
+  .history-group {
+    margin-bottom: 10px;
+    border: 1.5px solid #e8eaf6;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .history-group-header {
+    background: #f0f4ff;
+    padding: 9px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f3460;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+
+  .history-group-header:hover { background: #e0e7ff; }
+
+  .history-group-body { display: none; }
+  .history-group-body.open { display: block; }
+
+  .history-item {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #555;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .history-item:hover { background: #fafafa; }
+
+  .history-item .hi-product { flex: 1; font-weight: 500; color: #333; }
+  .history-item .hi-qty     { color: #888; white-space: nowrap; }
+
+  .sidebar-empty {
+    text-align: center; color: #bbb; font-size: 13px;
+    font-style: italic; padding: 30px 16px;
+  }
+
+  .clear-btn {
+    background: none; border: none; color: rgba(255,255,255,0.7);
+    font-size: 11px; cursor: pointer; padding: 2px 6px;
+    border-radius: 4px; transition: background 0.2s;
+  }
+  .clear-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+  /* ── PRODUCTS SIDEBAR ── */
+  .prod-cat-title {
+    font-size: 11px; font-weight: 700; color: #0f3460;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 8px 0 4px; border-bottom: 1.5px solid #e8eaf6;
+    margin-bottom: 6px; margin-top: 10px;
+  }
+  .prod-cat-title:first-child { margin-top: 0; }
+
+  .prod-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 8px; border-radius: 6px; font-size: 12px; color: #333;
+    background: #f8f9ff; margin-bottom: 4px; border: 1px solid #e8eaf6;
+  }
+  .prod-item:hover { background: #e0e7ff; }
+
+  .prod-del-btn {
+    background: none; border: none; cursor: pointer;
+    color: #dc2626; font-size: 13px; padding: 0 2px; line-height: 1;
+  }
+
+  .prod-add-form {
+    padding: 10px 12px;
+    border-top: 1px solid #f0f0f0;
+    background: #fafafa;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+
+  .prod-add-form input,
+  .prod-add-form select {
+    padding: 7px 10px; border: 1.5px solid #e0e0e0;
+    border-radius: 7px; font-size: 12px; background: #fff;
+    width: 100%;
+  }
+  .prod-add-form input:focus,
+  .prod-add-form select:focus { outline: none; border-color: #0f3460; }
+
+  .prod-add-btn {
+    padding: 8px; background: linear-gradient(135deg, #0f3460, #e94560);
+    color: white; border: none; border-radius: 7px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .prod-add-btn:hover { opacity: 0.9; }
+
+  /* ── PRODUCT PICKER MODAL ── */
+  .picker-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .picker-overlay.visible { display: flex; }
+
+  .picker-modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 96%;
+    max-width: 860px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+    overflow: hidden;
+  }
+
+  .picker-header {
+    background: linear-gradient(135deg, #0f3460, #e94560);
+    padding: 16px 22px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .picker-header h3 { font-size: 15px; font-weight: 700; white-space: nowrap; }
+
+  .picker-search {
+    flex: 1;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    outline: none;
+    max-width: 300px;
+  }
+
+  .picker-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    overflow-y: auto;
+    flex: 1;
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .picker-col { display: flex; flex-direction: column; gap: 8px; }
+
+  .picker-col-title {
+    font-size: 11px; font-weight: 700; color: #0f3460;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    padding-bottom: 6px; border-bottom: 2px solid #e8eaf6;
+    margin-bottom: 2px;
+  }
+
+  .picker-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .product-chip {
+    padding: 6px 12px;
+    background: #f0f4ff;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #0f3460;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .product-chip:hover { background: #0f3460; color: #fff; border-color: #0f3460; }
+  .product-chip.hidden { display: none; }
+
+  .picker-btn {
+    padding: 8px 14px;
+    background: #f0f4ff;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #0f3460;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .picker-btn:hover { border-color: #0f3460; background: #e0e7ff; }
+  .picker-btn.selected { background: #0f3460; color: #fff; border-color: #0f3460; }
+
+  /* ── RESPONSIVE ── */
+
+  /* Tablet landscape & small desktop (≤1024px) */
+  @media (max-width: 1024px) {
+    body { padding: 24px 16px; }
+    .app-wrapper { gap: 14px; }
+    .sidebar { width: 220px; }
+    .header { padding: 24px 24px; }
+    .header-text h2 { font-size: 22px; }
+    .form-body { padding: 24px 24px; }
+    .table-section { padding: 0 24px 28px; }
+    .form-group input, .form-group select { font-size: 15px; padding: 11px 14px; }
+    .item-row { grid-template-columns: 1fr 90px 100px 130px auto; gap: 8px; }
+  }
+
+  /* Tablet portrait & phone (≤1024px portrait = ≤768px wide typical, use 900px) */
+  @media (max-width: 900px) {
+    body { padding: 0; }
+
+    .app-wrapper { flex-direction: column; gap: 0; width: 100%; }
+
+    .container { border-radius: 0; width: 100%; }
+
+    /* Sidebars float over content */
+    .sidebar {
+      position: fixed;
+      top: 0; right: 0;
+      width: 280px !important;
+      max-height: 100vh;
+      border-radius: 0;
+      z-index: 300;
+      box-shadow: -4px 0 30px rgba(0,0,0,0.4);
+    }
+    .header {
+      padding: 14px 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-radius: 0;
+    }
+    .header-text h2 { font-size: 17px; }
+    .header-text p { font-size: 11px; }
+    .toggle-history-btn { padding: 6px 12px; font-size: 12px; }
+
+    .form-body { padding: 14px 14px; }
+    .table-section { padding: 0 14px 18px; }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .item-row {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .item-row .picker-btn { grid-column: 1 / -1; }
+    .item-row .qty        { grid-column: 1; }
+    .item-row .unit       { grid-column: 2; }
+    .item-row .remarks    { grid-column: 1 / -1; }
+    .item-row button[title="Remove"] { grid-column: 1 / -1; justify-self: end; }
+
+    .btn-row { flex-direction: column; gap: 8px; }
+    .add-btn { width: 100%; text-align: center; }
+
+    .compile-modal {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 0;
+      max-height: 100vh;
+    }
+    .picker-modal {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 0;
+      max-height: 100vh;
+    }
+    .picker-body { grid-template-columns: 1fr; }
+    .picker-search { max-width: 100%; }
+
+    .compile-modal-body { padding: 12px 14px; }
+    .compile-modal-footer { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+    .compile-modal-footer button { flex: 1; }
+  }
+
+  /* Phone portrait (≤480px) */
+  @media (max-width: 480px) {
+    .header-text h2 { font-size: 15px; }
+    .sidebar { width: 100% !important; }
+    .form-body { padding: 12px 12px; }
+    .table-section { padding: 0 12px 14px; }
+  }  /* Sidebar overlay backdrop on mobile */
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 299;
+  }
+  .sidebar-backdrop.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div class="app-wrapper">
+
+<div class="container">
+
+  <div class="header">
+    <div class="header-text">
+      <h2>📦 STR Monitoring System</h2>
+      <p>Stock Transfer Request — Tracking &amp; Management</p>
+      <p style="font-size:11px;opacity:0.6;margin-top:6px;">Created for Jeffrey Tayobong</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button id="btnProducts" class="toggle-history-btn" onclick="toggleProductsSidebar()">🛒 Products</button>
+      <button id="btnHistory" class="toggle-history-btn" onclick="toggleSidebar()">📋 History</button>
+    </div>
+  </div>
+
+  <div class="form-body">
+    <div id="firebaseStatus"></div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>STR Number</label>
+        <input type="text" id="strNumber" placeholder="e.g. STR-0001" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>REF #</label>
+        <input type="text" id="refNumber" placeholder="e.g. REF-0001" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="date">
+      </div>
+      <div class="form-group">
+        <label>Store</label>
+        <select id="store">
+          <option value="">Select Store</option>
+          <option>Jollibee Matalino</option>
+          <option>Jollibee Ankam</option>
+          <option>Jollibee Kamuning</option>
+          <option>Jollibee Quezon Avenue</option>
+          <option>Jollibee Timog</option>
+          <option>Jollibee Morayta</option>
+          <option>Jollibee España</option>
+          <option>Jollibee Cubao</option>
+          <option>Jollibee Araneta</option>
+          <option>Jollibee SM North EDSA</option>
+          <option>Jollibee Trinoma</option>
+          <option>Jollibee Fairview</option>
+          <option>Jollibee Novaliches</option>
+          <option>Jollibee Caloocan</option>
+          <option>Jollibee Monumento</option>
+          <option>Jollibee Ortigas</option>
+          <option>Jollibee Shaw</option>
+          <option>Jollibee Mandaluyong</option>
+          <option>Jollibee Megamall</option>
+          <option>Jollibee Pasig</option>
+          <option>Jollibee Taguig</option>
+          <option>Jollibee BGC</option>
+          <option>Jollibee Alabang</option>
+          <option>Jollibee Muntinlupa</option>
+          <option>Jollibee Las Piñas</option>
+          <option>Jollibee Parañaque</option>
+          <option>Jollibee Pasay</option>
+          <option>Jollibee Makati</option>
+          <option>Jollibee Ayala</option>
+          <option>Jollibee Glorietta</option>
+          <option>Jollibee Edsa Arayat</option>
+          <option>Jollibee Edsa Maya</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-title">Items</div>
+    <div id="itemsContainer"></div>
+
+    <div class="btn-row">
+      <button class="add-btn" onclick="addItem()">+ Add Item</button>
+      <button class="generate-btn" onclick="generateSTR()">Generate STR</button>
+    </div>
+  </div>
+
+  <div class="table-section">
+    <div class="table-actions">
+      <div class="section-title" style="margin:0;padding:0;border:none;line-height:2;">STR Records</div>
+      <div style="margin-left:auto;display:flex;gap:10px;">
+        <button class="send-history-btn" id="sendHistoryBtn" onclick="sendToHistory()">📋 Send to History</button>
+      </div>
+    </div>
+    <div id="strPrintArea" style="overflow-x:auto; border-radius:10px; border:1px solid #e8eaf6;">
+    <table id="strTable">
+      <thead>
+        <tr>
+          <th>STR #</th>
+          <th>Date</th>
+          <th>Store</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Unit</th>
+          <th>Remarks</th>
+          <th>REF #</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="empty-row"><td colspan="10">No records yet. Generate an STR to get started.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
+      <button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+      <div style="display:flex;gap:10px;">
+        <button class="compile-btn" style="background:#fff;color:#0f3460;border:2px solid #0f3460;" onclick="printSTRRecords()">🖨️ Print</button>
+        <button class="compile-btn" onclick="compileRecords()">📄 Compile</button>
+      </div>
+    </div>
+  </div>
+
+</div> <!-- /.container -->
+
+<!-- PRODUCTS SIDEBAR -->
+<div class="sidebar" id="productsSidebar">
+  <div class="sidebar-header">
+    🛒 Products
+    <div style="display:flex;gap:6px;align-items:center;">
+      <span id="prodCount">0 items</span>
+      <button class="clear-btn" onclick="toggleProductsSidebar()" title="Close">✕</button>
+    </div>
+  </div>
+  <div class="sidebar-body" id="productsBody" style="padding:12px 12px 0;">
+    <div class="sidebar-empty" id="productsEmpty">No products yet. Add some below.</div>
+  </div>
+  <div class="prod-add-form">
+    <input type="text" id="newProductName" placeholder="Product name..." />
+    <select id="newProductCat">
+      <option value="food">🍔 Food</option>
+      <option value="paper_packaging">📦 Paper &amp; Packaging</option>
+      <option value="janitorial_cleaning">🧹 Janitorial &amp; Cleaning</option>
+    </select>
+    <button class="prod-add-btn" onclick="addProduct()">+ Add Product</button>
+  </div>
+</div>
+
+<!-- HISTORY SIDEBAR -->
+<div class="sidebar" id="historySidebar">
+  <div class="sidebar-header">
+    📋 STR History
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="clear-btn" onclick="exportAllToExcel()">📊 Excel</button>
+      <button class="clear-btn" onclick="clearHistory()">Clear</button>
+      <button class="clear-btn" onclick="toggleSidebar()" title="Close">✕</button>
+    </div>
+  </div>
+  <div class="sidebar-body" id="historyBody">
+    <div class="sidebar-empty" id="historyEmpty">No STRs generated yet.</div>
+  </div>
+</div>
+
+</div> <!-- /.app-wrapper -->
+
+<!-- Sidebar backdrop (fixed) -->
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeAllSidebars()"></div>
+
+<!-- COMPILE MODAL -->
+<div class="compile-overlay" id="compileOverlay">
+  <div class="compile-modal">
+    <div class="compile-modal-header">
+      <h3>📄 Compiled STR Summary</h3>
+      <button class="modal-close-btn" style="background:rgba(255,255,255,0.2);color:white;" onclick="closeCompile()">✕</button>
+    </div>
+    <div class="compile-modal-body" id="compileBody"></div>
+    <div class="compile-modal-footer">
+      <button class="modal-close-btn" onclick="closeCompile()">Close</button>
+      <button class="modal-send-btn" onclick="sendToHistory()">📋 Send to History</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY VIEW MODAL -->
+<div class="compile-overlay" id="historyViewOverlay">
+  <div class="compile-modal">
+    <div class="compile-modal-header">
+      <h3 id="historyViewTitle">📋 Batch History</h3>
+      <button class="modal-close-btn" style="background:rgba(255,255,255,0.2);color:white;" onclick="closeHistoryView()">✕</button>
+    </div>
+    <div class="compile-modal-body" id="historyViewBody"></div>
+    <div class="compile-modal-footer">
+      <button class="modal-close-btn" onclick="closeHistoryView()">Close</button>
+      <button class="modal-send-btn" style="background:#0f3460;" onclick="printBatch()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT PICKER MODAL -->
+<div class="picker-overlay" id="pickerOverlay">
+  <div class="picker-modal">
+    <div class="picker-header">
+      <h3>🔍 Select Product</h3>
+      <input class="picker-search" id="pickerSearch" type="text" placeholder="Search product..." oninput="filterChips(this.value)">
+      <button class="modal-close-btn" style="background:rgba(255,255,255,0.2);color:white;flex-shrink:0;" onclick="closePicker()">✕</button>
+    </div>
+    <div class="picker-body">
+      <div class="picker-col">
+        <div class="picker-col-title">🍔 Food</div>
+        <div class="picker-chips" id="chipsFood"></div>
+      </div>
+      <div class="picker-col">
+        <div class="picker-col-title">📦 Paper &amp; Packaging</div>
+        <div class="picker-chips" id="chipsPaper"></div>
+      </div>
+      <div class="picker-col">
+        <div class="picker-col-title">🧹 Janitorial &amp; Cleaning</div>
+        <div class="picker-chips" id="chipsJanitorial"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+<script>
+  // ─── FIREBASE CONFIG ───────────────────────────────────────────────
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCisARFLGZ7A-4L9-MopWYh5JB1VCS-3p0",
+    authDomain: "str-system-792da.firebaseapp.com",
+    projectId: "str-system-792da",
+    storageBucket: "str-system-792da.firebasestorage.app",
+    messagingSenderId: "642056825572",
+    appId: "1:642056825572:web:fcf5fa28e93bd7e2eb1af1"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // ─── STATE ─────────────────────────────────────────────────────────
+  let productItems = [];  // [{id, name, category}] loaded from Firestore
+  let _pickerTargetRow = null;
+  const historyBatches = JSON.parse(localStorage.getItem('str_history') || '[]');
+
+  // ─── INIT ──────────────────────────────────────────────────────────
+  document.getElementById("date").valueAsDate = new Date();
+  restoreFormInputs();
+  loadProductsFromFirestore();
+  loadRecordsFromFirestore();
+  renderHistory();
+  addItem();
+
+  // ─── PRODUCTS MANAGEMENT (Firestore) ──────────────────────────────
+  async function loadProductsFromFirestore() {
+    try {
+      const snapshot = await db.collection("str_items").get();
+      productItems = snapshot.docs
+        .map(doc => ({ id: doc.id, name: doc.data().name, category: doc.data().category || 'food' }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    } catch(err) {
+      console.error("Failed to load products:", err);
+      productItems = [];
+    }
+    renderProducts();
+    buildPickerChips();
+  }
+
+  async function addProduct() {
+    const nameEl = document.getElementById("newProductName");
+    const catEl  = document.getElementById("newProductCat");
+    const name   = nameEl.value.trim();
+    if (!name) { nameEl.focus(); return; }
+    if (productItems.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+      alert("Product already exists."); return;
+    }
+    try {
+      const docRef = await db.collection("str_items").add({ name, category: catEl.value });
+      productItems.push({ id: docRef.id, name, category: catEl.value });
+      productItems.sort((a, b) => a.name.localeCompare(b.name));
+      nameEl.value = "";
+      renderProducts();
+      buildPickerChips();
+    } catch(err) {
+      alert("Failed to save product: " + err.message);
+    }
+  }
+
+  async function deleteProduct(id, name) {
+    if (!confirm(`Remove "${name}"?`)) return;
+    try {
+      await db.collection("str_items").doc(id).delete();
+      productItems = productItems.filter(p => p.id !== id);
+      renderProducts();
+      buildPickerChips();
+    } catch(err) {
+      alert("Failed to delete product: " + err.message);
+    }
+  }
+
+  function renderProducts() {
+    const body  = document.getElementById("productsBody");
+    const empty = document.getElementById("productsEmpty");
+    const count = document.getElementById("prodCount");
+
+    body.querySelectorAll(".prod-cat-title, .prod-item").forEach(el => el.remove());
+    count.textContent = `${productItems.length} item${productItems.length !== 1 ? 's' : ''}`;
+
+    if (productItems.length === 0) { empty.style.display = "block"; return; }
+    empty.style.display = "none";
+
+    const cats = [
+      { key: 'food',                label: '🍔 Food' },
+      { key: 'paper_packaging',     label: '📦 Paper & Packaging' },
+      { key: 'janitorial_cleaning', label: '🧹 Janitorial & Cleaning' }
+    ];
+
+    cats.forEach(cat => {
+      const items = productItems.filter(p => p.category === cat.key);
+      if (items.length === 0) return;
+      const title = document.createElement("div");
+      title.className = "prod-cat-title";
+      title.textContent = cat.label;
+      body.appendChild(title);
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "prod-item";
+        div.innerHTML = `<span>${item.name}</span><button class="prod-del-btn" title="Remove" onclick="deleteProduct('${item.id}','${item.name.replace(/'/g,"\\'")}')">✕</button>`;
+        body.appendChild(div);
+      });
+    });
+  }
+
+  function toggleProductsSidebar() {
+    const sidebar = document.getElementById("productsSidebar");
+    sidebar.classList.toggle("visible");
+    document.getElementById("btnProducts").style.display = sidebar.classList.contains("visible") ? "none" : "";
+    updateBackdrop();
+  }
+
+  // Allow pressing Enter in the product name input
+  document.getElementById("newProductName").addEventListener("keydown", e => {
+    if (e.key === "Enter") addProduct();
+  });
+
+  function buildPickerChips() {
+    const catMap = {
+      food: document.getElementById("chipsFood"),
+      paper_packaging: document.getElementById("chipsPaper"),
+      janitorial_cleaning: document.getElementById("chipsJanitorial")
+    };
+    Object.values(catMap).forEach(el => el.innerHTML = "");
+
+    productItems.forEach(item => {
+      const cat = catMap[item.category] || catMap.food;
+      const chip = document.createElement("span");
+      chip.className = "product-chip";
+      chip.textContent = item.name;
+      chip.dataset.name = item.name;
+      chip.onclick = () => selectProduct(item.name);
+      cat.appendChild(chip);
+    });
+  }
+
+  function filterChips(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll(".product-chip").forEach(chip => {
+      chip.classList.toggle("hidden", !chip.dataset.name.toLowerCase().includes(q));
+    });
+  }
+
+  function openPicker(rowEl) {
+    _pickerTargetRow = rowEl;
+    document.getElementById("pickerSearch").value = "";
+    filterChips("");
+    const current = rowEl.querySelector(".picker-btn").dataset.value;
+    document.querySelectorAll(".product-chip").forEach(c => {
+      c.classList.toggle("selected", c.dataset.name === current);
+    });
+    document.getElementById("pickerOverlay").classList.add("visible");
+    setTimeout(() => document.getElementById("pickerSearch").focus(), 50);
+  }
+
+  function closePicker() {
+    document.getElementById("pickerOverlay").classList.remove("visible");
+    _pickerTargetRow = null;
+  }
+
+  function selectProduct(name) {
+    if (!_pickerTargetRow) return;
+    const btn = _pickerTargetRow.querySelector(".picker-btn");
+    btn.textContent = name;
+    btn.dataset.value = name;
+    btn.classList.add("selected");
+    closePicker();
+  }
+
+  // ─── ADD ITEM ROW ──────────────────────────────────────────────────
+  function addItem() {
+    const container = document.getElementById("itemsContainer");
+    const div = document.createElement("div");
+    div.classList.add("item-row");
+    div.innerHTML = `
+      <button type="button" class="picker-btn" data-value="" onclick="openPicker(this.closest('.item-row'))">Select Product</button>
+      <input type="number" class="qty" placeholder="Qty" min="1">
+      <select class="unit">
+        <option value="">Unit</option>
+        <option>pcs</option>
+        <option>pack</option>
+        <option>grams</option>
+        <option>kg</option>
+        <option>case</option>
+      </select>
+      <select class="remarks">
+        <option value="">Remarks</option>
+        <option value="ROBI">ROBI</option>
+        <option value="TBR">TBR</option>
+        <option value="PT">PT</option>
+        <option value="SAFE KEEP">SAFE KEEP</option>
+      </select>
+      <button type="button" onclick="this.closest('.item-row').remove()" style="background:none;border:none;cursor:pointer;font-size:16px;" title="Remove">🗑️</button>
+    `;
+    container.appendChild(div);
+  }
+
+  // ─── GENERATE STR ──────────────────────────────────────────────────
+  function generateSTR() {
+    const strNumber = document.getElementById("strNumber").value.trim();
+    const refNumber = document.getElementById("refNumber").value.trim();
+    const date      = document.getElementById("date").value;
+    const store     = document.getElementById("store").value;
+
+    if (!strNumber || !date || !store) {
+      alert("Please fill in STR Number, Date, and Store.");
+      return;
+    }
+
+    const rows  = document.querySelectorAll(".item-row");
+    const tbody = document.querySelector("#strTable tbody");
+    let added   = 0;
+
+    rows.forEach(row => {
+      const product = row.querySelector(".picker-btn").dataset.value;
+      const qty     = row.querySelector(".qty").value;
+      const unit    = row.querySelector(".unit").value;
+      const remarks = row.querySelector(".remarks").value;
+
+      if (product && qty) {
+        const emptyRow = tbody.querySelector(".empty-row");
+        if (emptyRow) emptyRow.remove();
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${strNumber}</td>
+          <td>${date}</td>
+          <td>${store}</td>
+          <td>${product}</td>
+          <td>${qty}</td>
+          <td>${unit}</td>
+          <td>
+            <select class="status-select" style="background:#f0f4ff;color:#0f3460;border:1px solid #c7d2fe;">
+              <option value="">— Select —</option>
+              <option value="ROBI" ${remarks==='ROBI'?'selected':''}>ROBI</option>
+              <option value="TBR" ${remarks==='TBR'?'selected':''}>TBR</option>
+              <option value="PT" ${remarks==='PT'?'selected':''}>PT</option>
+              <option value="SAFE KEEP" ${remarks==='SAFE KEEP'?'selected':''}>SAFE KEEP</option>
+            </select>
+          </td>
+          <td>${refNumber}</td>
+          <td>
+            <select class="status-select pending" onchange="updateStatus(this)">
+              <option value="pending"   selected>🟡 Pending</option>
+              <option value="returned">🔵 Returned</option>
+              <option value="paid">🟢 Paid</option>
+              <option value="cancelled">🔴 Cancelled</option>
+            </select>
+          </td>
+          <td>
+            <button onclick="deleteRow(this)" style="background:none;border:none;cursor:pointer;font-size:16px;" title="Delete">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+        addToHistory(strNumber, date, store, product, qty, remarks, refNumber);
+
+        // Save to Firestore
+        db.collection("str_records").add({
+          strNumber, refNumber, date, store,
+          product, qty, unit, remarks,
+          status: "pending",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(docRef => {
+          tr.dataset.docId = docRef.id;
+        }).catch(err => console.error("Failed to save:", err));
+
+        added++;
+      }
+    });
+
+    if (added === 0) {
+      alert("Please add at least one item with a product and quantity.");
+      return;
+    }
+
+    alert(`✅ STR ${strNumber} added with ${added} item(s).`);
+
+    // Clear item rows and reset form
+    document.getElementById("itemsContainer").innerHTML = "";
+    document.getElementById("strNumber").value = "";
+    document.getElementById("refNumber").value = "";
+    document.getElementById("date").valueAsDate = new Date();
+    document.getElementById("store").value = "";
+    localStorage.removeItem("str_form");
+    addItem();
+  }
+
+  // ─── HELPERS ───────────────────────────────────────────────────────
+  function updateStatus(sel) {
+    sel.className = "status-select " + sel.value;
+  }
+
+  function deleteRow(btn) {
+    const tbody = document.querySelector("#strTable tbody");
+    const tr = btn.closest("tr");
+    const docId = tr.dataset.docId;
+    if (docId) {
+      db.collection("str_records").doc(docId).delete()
+        .catch(err => console.error("Delete failed:", err));
+    }
+    tr.remove();
+    if (tbody.rows.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="10">No records yet. Generate an STR to get started.</td></tr>`;
+    }
+  }
+
+  // ─── COMPILE & SEND TO HISTORY ────────────────────────────────────
+  function printSTRRecords() {
+    const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
+    if (rows.length === 0) { alert("No records to print."); return; }
+
+    let rowsHtml = '';
+    rows.forEach(function(tr) {
+      const cells = tr.querySelectorAll("td");
+      const remarks = cells[6].querySelector("select") ? cells[6].querySelector("select").value : cells[6].textContent;
+      const statusRaw = cells[8].querySelector("select") ? cells[8].querySelector("select").value : cells[8].textContent;
+      const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1);
+      rowsHtml += '<tr>'
+        + '<td>' + cells[0].textContent + '</td>'
+        + '<td>' + cells[1].textContent + '</td>'
+        + '<td>' + cells[2].textContent + '</td>'
+        + '<td>' + cells[3].textContent + '</td>'
+        + '<td>' + cells[4].textContent + '</td>'
+        + '<td>' + cells[5].textContent + '</td>'
+        + '<td>' + remarks + '</td>'
+        + '<td>' + cells[7].textContent + '</td>'
+        + '<td>' + status + '</td>'
+        + '</tr>';
+    });
+
+    const html = '<!DOCTYPE html><html><head><title>STR Records</title>'
+      + '<style>'
+      + 'body{font-family:Segoe UI,Arial,sans-serif;padding:16px;margin:0}'
+      + 'h3{font-size:13px;color:#0f3460;margin-bottom:10px}'
+      + 'table{width:100%;border-collapse:collapse;font-size:11px}'
+      + 'th{background:#0f3460;color:white;padding:7px 8px;text-align:left}'
+      + 'td{padding:6px 8px;border-bottom:1px solid #e0e0e0}'
+      + 'tr:nth-child(even) td{background:#f8f9ff}'
+      + '@page{size:portrait;margin:10mm}'
+      + '<\/style><\/head><body>'
+      + '<h3>STR Records</h3>'
+      + '<table><thead><tr>'
+      + '<th>STR #</th><th>Date</th><th>Store</th><th>Product</th>'
+      + '<th>Qty</th><th>Unit</th><th>Remarks</th><th>REF #</th><th>Status</th>'
+      + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>'
+      + '<\/body><\/html>';
+
+    const win = window.open('', '_blank', 'width=900,height=600');
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
+    win.close();
+  }
+
+  function compileRecords() {
+    const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
+    if (rows.length === 0) { alert("No records to compile."); return; }
+
+    const body = document.getElementById("compileBody");
+    body.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:#0f3460;color:white;">
+            <th style="padding:10px 12px;text-align:left;">STR #</th>
+            <th style="padding:10px 12px;text-align:left;">Date</th>
+            <th style="padding:10px 12px;text-align:left;">Store</th>
+            <th style="padding:10px 12px;text-align:left;">Product</th>
+            <th style="padding:10px 12px;text-align:left;">Qty</th>
+            <th style="padding:10px 12px;text-align:left;">Unit</th>
+            <th style="padding:10px 12px;text-align:left;">Remarks</th>
+            <th style="padding:10px 12px;text-align:left;">REF #</th>
+            <th style="padding:10px 12px;text-align:left;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="compileTableBody"></tbody>
+      </table>
+    `;
+
+    const tbody = document.getElementById("compileTableBody");
+    rows.forEach(tr => {
+      const cells = tr.querySelectorAll("td");
+      const remarks = cells[6].querySelector("select")?.value || '';
+      const status  = cells[8].querySelector("select")?.value || 'pending';
+      const statusLabels = { pending:'🟡 Pending', returned:'🔵 Returned', paid:'🟢 Paid', cancelled:'🔴 Cancelled' };
+      const row = document.createElement("tr");
+      row.style.borderBottom = "1px solid #f0f0f0";
+      row.innerHTML = `
+        <td style="padding:10px 12px;">${cells[0].textContent}</td>
+        <td style="padding:10px 12px;">${cells[1].textContent}</td>
+        <td style="padding:10px 12px;">${cells[2].textContent}</td>
+        <td style="padding:10px 12px;">${cells[3].textContent}</td>
+        <td style="padding:10px 12px;">${cells[4].textContent}</td>
+        <td style="padding:10px 12px;">${cells[5].textContent}</td>
+        <td style="padding:10px 12px;">${remarks}</td>
+        <td style="padding:10px 12px;">${cells[7].textContent}</td>
+        <td style="padding:10px 12px;">${statusLabels[status] || status}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    document.getElementById("compileOverlay").classList.add("visible");
+    document.getElementById("sendHistoryBtn").classList.add("visible");
+  }
+
+  function closeCompile() {
+    document.getElementById("compileOverlay").classList.remove("visible");
+  }
+
+  // ─── HISTORY ───────────────────────────────────────────────────────
+  function addToHistory() {} // no-op, batching handled in sendToHistory
+
+  function sendToHistory() {
+    const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
+    if (rows.length === 0) return;
+
+    const now = new Date().toLocaleString('en-PH', { dateStyle:'medium', timeStyle:'short' });
+    const batchRows = [];
+
+    rows.forEach(tr => {
+      const cells = tr.querySelectorAll("td");
+      batchRows.push({
+        strNumber: cells[0].textContent,
+        date:      cells[1].textContent,
+        store:     cells[2].textContent,
+        product:   cells[3].textContent,
+        qty:       cells[4].textContent,
+        unit:      cells[5].textContent,
+        remarks:   cells[6].querySelector("select")?.value || '',
+        refNumber: cells[7].textContent,
+        status:    cells[8].querySelector("select")?.value || 'pending'
+      });
+      const docId = tr.dataset.docId;
+      if (docId) {
+        db.collection("str_records").doc(docId)
+          .update({ archived: true })
+          .catch(err => console.error(err));
+      }
+      tr.remove();
+    });
+
+    historyBatches.push({ sentAt: now, rows: batchRows });
+    localStorage.setItem('str_history', JSON.stringify(historyBatches));
+    renderHistory();
+
+    const tbody = document.querySelector("#strTable tbody");
+    if (tbody.rows.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="10">No records yet. Generate an STR to get started.</td></tr>`;
+    }
+
+    document.getElementById("historySidebar").classList.add("visible");
+    closeCompile();
+    document.getElementById("sendHistoryBtn").classList.remove("visible");
+    alert("✅ Records sent to history.");
+  }
+
+  function renderHistory() {
+    const body  = document.getElementById("historyBody");
+    const empty = document.getElementById("historyEmpty");
+    body.querySelectorAll(".history-group").forEach(g => g.remove());
+
+    if (historyBatches.length === 0) { empty.style.display = "block"; return; }
+    empty.style.display = "none";
+
+    [...historyBatches].reverse().forEach((batch, i) => {
+      const batchIndex = historyBatches.length - 1 - i;
+      const div = document.createElement("div");
+      div.className = "history-group";
+      div.style.cursor = "pointer";
+      div.innerHTML = `
+        <div class="history-group-header" onclick="viewBatch(${batchIndex})">
+          <span>${batch.sentAt}</span>
+          <span>${batch.rows.length} item(s) ▶</span>
+        </div>
+      `;
+      body.appendChild(div);
+    });
+  }
+
+  let currentViewBatchIndex = null;
+
+  function viewBatch(index) {
+    const batch = historyBatches[index];
+    currentViewBatchIndex = index;
+    document.getElementById("historyViewTitle").textContent = `📋 ${batch.sentAt}`;
+
+    const body = document.getElementById("historyViewBody");
+    body.innerHTML = `
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px;">
+          <thead>
+            <tr style="background:#0f3460;color:white;">
+              <th style="padding:10px 12px;text-align:left;">STR #</th>
+              <th style="padding:10px 12px;text-align:left;">Date</th>
+              <th style="padding:10px 12px;text-align:left;">Store</th>
+              <th style="padding:10px 12px;text-align:left;">Product</th>
+              <th style="padding:10px 12px;text-align:left;">Qty</th>
+              <th style="padding:10px 12px;text-align:left;">Unit</th>
+              <th style="padding:10px 12px;text-align:left;">Remarks</th>
+              <th style="padding:10px 12px;text-align:left;">REF #</th>
+              <th style="padding:10px 12px;text-align:left;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${batch.rows.map(r => `
+              <tr style="border-bottom:1px solid #f0f0f0;">
+                <td style="padding:9px 12px;">${r.strNumber}</td>
+                <td style="padding:9px 12px;">${r.date}</td>
+                <td style="padding:9px 12px;">${r.store}</td>
+                <td style="padding:9px 12px;">${r.product}</td>
+                <td style="padding:9px 12px;">${r.qty}</td>
+                <td style="padding:9px 12px;">${r.unit}</td>
+                <td style="padding:9px 12px;">${r.remarks}</td>
+                <td style="padding:9px 12px;">${r.refNumber}</td>
+                <td style="padding:9px 12px;">${r.status}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    document.getElementById("historyViewOverlay").classList.add("visible");
+  }
+
+  function closeHistoryView() {
+    document.getElementById("historyViewOverlay").classList.remove("visible");
+    currentViewBatchIndex = null;
+  }
+
+  function printBatch() {
+    const batch = historyBatches[currentViewBatchIndex];
+    if (!batch) return;
+
+    let rowsHtml = '';
+    batch.rows.forEach(function(r) {
+      const status = r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : '';
+      rowsHtml += '<tr>'
+        + '<td>' + r.strNumber + '</td>'
+        + '<td>' + r.date + '</td>'
+        + '<td>' + r.store + '</td>'
+        + '<td>' + r.product + '</td>'
+        + '<td>' + r.qty + '</td>'
+        + '<td>' + r.unit + '</td>'
+        + '<td>' + r.remarks + '</td>'
+        + '<td>' + r.refNumber + '</td>'
+        + '<td>' + status + '</td>'
+        + '</tr>';
+    });
+
+    const html = '<!DOCTYPE html><html><head><title>STR History</title>'
+      + '<style>'
+      + 'body{font-family:Segoe UI,Arial,sans-serif;padding:16px;margin:0}'
+      + 'h3{font-size:13px;color:#0f3460;margin-bottom:10px}'
+      + 'table{width:100%;border-collapse:collapse;font-size:11px}'
+      + 'th{background:#0f3460;color:white;padding:7px 8px;text-align:left}'
+      + 'td{padding:6px 8px;border-bottom:1px solid #e0e0e0}'
+      + 'tr:nth-child(even) td{background:#f8f9ff}'
+      + '@page{size:portrait;margin:10mm}'
+      + '<\/style><\/head><body>'
+      + '<h3>STR History - ' + batch.sentAt + '</h3>'
+      + '<table><thead><tr>'
+      + '<th>STR #</th><th>Date</th><th>Store</th><th>Product</th>'
+      + '<th>Qty</th><th>Unit</th><th>Remarks</th><th>REF #</th><th>Status</th>'
+      + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>'
+      + '<\/body><\/html>';
+
+    const win = window.open('', '_blank', 'width=900,height=600');
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
+    win.close();
+  }
+
+  function exportAllToExcel() {
+    const wb = XLSX.utils.book_new();
+    const headers = ["STR #","Date","Store","Product","Qty","Unit","Remarks","REF #","Status"];
+
+    historyBatches.forEach((batch, i) => {
+      const rows = batch.rows.map(r => [
+        r.strNumber, r.date, r.store, r.product,
+        r.qty, r.unit, r.remarks, r.refNumber, r.status
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      // Auto column widths
+      ws['!cols'] = headers.map((h, ci) => ({
+        wch: Math.max(h.length, ...rows.map(r => String(r[ci] || '').length)) + 2
+      }));
+      const sheetName = `Batch ${i + 1} - ${batch.sentAt.replace(/[/:]/g, '-').substring(0, 20)}`;
+      XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
+    });
+
+    XLSX.writeFile(wb, `STR_Records_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+
+  function toggleGroup(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle("open");
+    const arrow = header.querySelector("span:last-child");
+    arrow.textContent = arrow.textContent.includes("▾")
+      ? arrow.textContent.replace("▾", "▸")
+      : arrow.textContent.replace("▸", "▾");
+  }
+
+  function clearHistory() {
+    if (!confirm("Clear all history? This will also delete archived records from Firestore.")) return;
+
+    // Delete all archived docs from Firestore
+    db.collection("str_records").get().then(snapshot => {
+      const batch = db.batch();
+      snapshot.docs.forEach(doc => {
+        if (doc.data().archived) batch.delete(doc.ref);
+      });
+      return batch.commit();
+    }).catch(err => console.error("Firestore clear failed:", err));
+
+    historyBatches.length = 0;
+    localStorage.removeItem('str_history');
+    renderHistory();
+  }
+
+  function toggleSidebar() {
+    const sidebar = document.getElementById("historySidebar");
+    sidebar.classList.toggle("visible");
+    document.getElementById("btnHistory").style.display = sidebar.classList.contains("visible") ? "none" : "";
+    updateBackdrop();
+  }
+
+  function updateBackdrop() {
+    const anyOpen = document.getElementById("productsSidebar").classList.contains("visible")
+                 || document.getElementById("historySidebar").classList.contains("visible");
+    document.getElementById("sidebarBackdrop").classList.toggle("visible", anyOpen && window.innerWidth <= 900);
+  }
+
+  function closeAllSidebars() {
+    document.getElementById("productsSidebar").classList.remove("visible");
+    document.getElementById("historySidebar").classList.remove("visible");
+    document.getElementById("sidebarBackdrop").classList.remove("visible");
+    document.getElementById("btnProducts").style.display = "";
+    document.getElementById("btnHistory").style.display = "";
+  }
+
+  // ─── PERSIST FORM INPUTS ───────────────────────────────────────────
+  function saveFormInputs() {
+    localStorage.setItem('str_form', JSON.stringify({
+      strNumber: document.getElementById("strNumber").value,
+      refNumber: document.getElementById("refNumber").value,
+      date:      document.getElementById("date").value,
+      store:     document.getElementById("store").value,
+    }));
+  }
+
+  function restoreFormInputs() {
+    const saved = JSON.parse(localStorage.getItem('str_form') || '{}');
+    if (saved.strNumber) document.getElementById("strNumber").value = saved.strNumber;
+    if (saved.refNumber) document.getElementById("refNumber").value = saved.refNumber;
+    if (saved.date)      document.getElementById("date").value      = saved.date;
+    if (saved.store)     document.getElementById("store").value     = saved.store;
+  }
+
+  // Auto-save form inputs on change
+  ["strNumber","refNumber","date","store"].forEach(id => {
+    document.getElementById(id).addEventListener("input", saveFormInputs);
+    document.getElementById(id).addEventListener("change", saveFormInputs);
+  });
+
+  // ─── LOAD RECORDS FROM FIRESTORE ───────────────────────────────────
+  async function loadRecordsFromFirestore() {
+    try {
+      const snapshot = await db.collection("str_records").get();
+      const allDocs = snapshot.docs.sort((a,b) => {
+        const ta = a.data().createdAt?.seconds || 0;
+        const tb = b.data().createdAt?.seconds || 0;
+        return ta - tb;
+      });
+
+      if (snapshot.empty) return;
+
+      const tbody = document.querySelector("#strTable tbody");
+
+      allDocs.forEach(doc => {
+        const d = doc.data();
+        if (d.archived) return;
+
+        const emptyRow = tbody.querySelector(".empty-row");
+        if (emptyRow) emptyRow.remove();
+        const tr = document.createElement("tr");
+        tr.dataset.docId = doc.id;
+        tr.innerHTML = `
+          <td>${d.strNumber || ''}</td>
+          <td>${d.date || ''}</td>
+          <td>${d.store || ''}</td>
+          <td>${d.product || ''}</td>
+          <td>${d.qty || ''}</td>
+          <td>${d.unit || ''}</td>
+          <td>
+            <select class="status-select" style="background:#f0f4ff;color:#0f3460;border:1px solid #c7d2fe;">
+              <option value="">— Select —</option>
+              <option value="ROBI" ${d.remarks==='ROBI'?'selected':''}>ROBI</option>
+              <option value="TBR" ${d.remarks==='TBR'?'selected':''}>TBR</option>
+              <option value="PT" ${d.remarks==='PT'?'selected':''}>PT</option>
+              <option value="SAFE KEEP" ${d.remarks==='SAFE KEEP'?'selected':''}>SAFE KEEP</option>
+            </select>
+          </td>
+          <td>${d.refNumber || ''}</td>
+          <td>
+            <select class="status-select ${d.status || 'pending'}" onchange="updateStatus(this)">
+              <option value="pending"   ${d.status==='pending'?'selected':''}>🟡 Pending</option>
+              <option value="returned"  ${d.status==='returned'?'selected':''}>🔵 Returned</option>
+              <option value="paid"      ${d.status==='paid'?'selected':''}>🟢 Paid</option>
+              <option value="cancelled" ${d.status==='cancelled'?'selected':''}>🔴 Cancelled</option>
+            </select>
+          </td>
+          <td>
+            <button onclick="deleteRow(this)" style="background:none;border:none;cursor:pointer;font-size:16px;" title="Delete">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+        addToHistory(d.strNumber, d.date, d.store, d.product, d.qty, d.remarks, d.refNumber);
+      });
+    } catch(err) {
+      console.error("Failed to load records:", err);
+    }
+  }
+
+  // ─── SCROLL TO TOP BUTTON ──────────────────────────────────────────
+</script>
+
+</body>
+</html>
