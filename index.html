@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="STR System">
-<script>if(sessionStorage.getItem('header_hidden')==='1')document.write('<style>#stickyHeader{display:none}</style>')</script>
+<script>/* header state handled in initApp */</script>
 <style>
   /* ── SMOOTH TRANSITIONS ── */
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,7 +17,7 @@
   html { scroll-behavior: smooth; }
 
   /* Buttons — snappier feel */
-  button { transition: all 0.18s ease; }
+  button { transition: background 0.18s ease, opacity 0.18s ease, transform 0.18s ease; }
   button:active { transform: scale(0.96); }
 
   /* Modals — fade + scale in */
@@ -142,72 +142,173 @@
     margin: 0 auto;
   }
 
-  /* Sticky header bar that follows scroll */
+  /* Header stays at top — not sticky */
   .sticky-header {
-    position: sticky;
-    top: 0;
+    position: relative;
+    top: auto;
     z-index: 50;
     background: linear-gradient(135deg, #b45309, #f59e0b);
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     border-radius: 16px 16px 0 0;
-    will-change: border-radius;
-  }
-  .sticky-header.is-stuck {
-    border-radius: 0;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
   }
 
-  /* Restore sticky header button */
-  #restoreHeaderBtn {
+  /* Desktop floating edge buttons — all hidden by default */
+  #calcBtn,
+  #btnProducts_float,
+  #btnHistory_float {
+    position: fixed;
+    right: 0;
+    left: auto;
+    z-index: 60;
+    background: linear-gradient(135deg, #b45309, #f59e0b);
+    color: white;
+    border: none;
+    border-radius: 20px 0 0 20px;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    line-height: 1;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: -3px 3px 16px rgba(0,0,0,0.3);
+    transition: opacity 0.2s ease;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  /* Desktop only — show float buttons */
+  @media (min-width: 1025px) {
+    #calcBtn { display: flex !important; }
+    #btnProducts_float.scroll-show,
+    #btnHistory_float.scroll-show { display: flex !important; }
+    #calcBtn           { top: 12px; }
+    #btnProducts_float { top: 60px; }
+    #btnHistory_float  { top: 108px; }
+  }
+
+  /* When sidebar open — desktop only */
+  @media (min-width: 1025px) {
+    body.sidebar-open #calcBtn {
+      right: auto !important;
+      left: 0 !important;
+      border-radius: 0 20px 20px 0 !important;
+      box-shadow: 3px 3px 16px rgba(0,0,0,0.3) !important;
+    }
+    body.products-open #btnProducts_float { display: none !important; }
+    body.history-open  #btnHistory_float  { display: none !important; }
+    body.products-open #btnHistory_float.scroll-show,
+    body.history-open  #btnProducts_float.scroll-show {
+      right: auto !important;
+      left: 0 !important;
+      border-radius: 0 20px 20px 0 !important;
+      box-shadow: 3px 3px 16px rgba(0,0,0,0.3) !important;
+    }
+    body.sidebar-open #calcPanel {
+      right: auto;
+      left: 0;
+      border-radius: 0 16px 16px 0;
+      box-shadow: 4px 4px 24px rgba(0,0,0,0.3);
+    }
+  }
+
+  /* ── MOBILE FLOATING MENU ── */
+
+  /* Base styles for toggle + action buttons — outside media query so they apply immediately */
+  #mobileFloatToggle,
+  .mobile-float-btn {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #b45309, #f59e0b);
+    color: white;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Default pill shape for right-snap — no transition so it's instant on first paint */
+    border-radius: 20px 0 0 20px;
+    box-shadow: -3px 3px 16px rgba(0,0,0,0.3);
+    transition: none;
+  }
+
+  /* Pill shapes — outside media query so they apply on first paint */
+  #mobileFloatMenu.snapped-right #mobileFloatToggle,
+  #mobileFloatMenu.snapped-right .mobile-float-btn {
+    border-radius: 20px 0 0 20px;
+    box-shadow: -3px 3px 16px rgba(0,0,0,0.3);
+    transition: border-radius 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  #mobileFloatMenu.snapped-left #mobileFloatToggle,
+  #mobileFloatMenu.snapped-left .mobile-float-btn {
+    border-radius: 0 20px 20px 0;
+    box-shadow: 3px 3px 16px rgba(0,0,0,0.3);
+    transition: border-radius 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  /* Circle while dragging — overrides pill with higher specificity */
+  #mobileFloatMenu.is-dragging #mobileFloatToggle,
+  #mobileFloatMenu.is-dragging .mobile-float-btn {
+    border-radius: 50% !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+    transform: scale(1.1);
+    transition: none !important;
+  }
+
+  /* Mobile float menu — position fixed always (hidden on desktop via display:none) */
+  #mobileFloatMenu {
     position: fixed;
     top: 12px;
     right: 0;
-    left: auto;
     z-index: 60;
-    background: linear-gradient(135deg, #b45309, #f59e0b);
-    color: white;
-    border: none;
-    border-radius: 20px 0 0 20px;
-    padding: 8px 12px 8px 10px;
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: -3px 3px 16px rgba(0,0,0,0.3);
-    display: none;
-    transition: left 0.25s ease, right 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+    touch-action: none;
+    user-select: none;
+    pointer-events: all;
   }
-  #restoreHeaderBtn:hover { opacity: 0.95; }
 
-  #calcBtn {
-    position: fixed;
-    top: 52px;
-    right: 0;
-    left: auto;
-    z-index: 60;
-    background: linear-gradient(135deg, #b45309, #f59e0b);
-    color: white;
-    border: none;
-    border-radius: 20px 0 0 20px;
-    padding: 8px 12px 8px 10px;
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: -3px 3px 16px rgba(0,0,0,0.3);
-    transition: left 0.25s ease, right 0.25s ease;
-  }
-  #calcBtn:hover { opacity: 0.95; }
+  @media (max-width: 1024px) {
+    /* Hide individual floating buttons on mobile/tablet */
+    #calcBtn,
+    #btnProducts_float,
+    #btnHistory_float {
+      display: none !important;
+    }
+    /* Expanded buttons panel */
+    #mobileFloatItems {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #mobileFloatItems.open {
+      max-height: 300px;
+      opacity: 1;
+      pointer-events: all;
+    }
 
-  /* When sidebar open — flip to left */
-  body.sidebar-open #restoreHeaderBtn,
-  body.sidebar-open #calcBtn {
-    right: auto;
-    left: 0;
-    border-radius: 0 20px 20px 0;
-    box-shadow: 3px 3px 16px rgba(0,0,0,0.3);
+    #mobileFloatMenu.snapped-left {
+      right: auto;
+      left: 0;
+    }
+    #mobileFloatMenu.snapped-left #mobileFloatItems {
+      align-items: flex-start;
+    }
   }
-  body.sidebar-open #calcPanel {
-    right: auto;
-    left: 0;
-    border-radius: 0 16px 16px 0;
-    box-shadow: 4px 4px 24px rgba(0,0,0,0.3);
+
+  /* Hide mobile menu on desktop (≥1025px) */
+  @media (min-width: 1025px) {
+    #mobileFloatMenu { display: none !important; }
   }  .header-text h2 { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
   .header-text p  { font-size: 13px; opacity: 0.8; margin-top: 4px; }
 
@@ -760,26 +861,32 @@
 
   /* ── RESPONSIVE ── */
 
-  /* Tablet landscape & small desktop (≤1024px) */
+  /* All mobile & tablet (≤1024px) — full width, no background showing */
   @media (max-width: 1024px) {
-    body { padding: 24px 16px; }
-    .app-wrapper { gap: 14px; }
-    .sidebar { width: 220px; }
-    .header { padding: 24px 24px; }
-    .header-text h2 { font-size: 22px; }
-    .form-body { padding: 24px 24px; }
-    .table-section { padding: 0 24px 28px; }
+    body {
+      padding: 0;
+      background: #fff;
+      min-height: 100dvh;
+    }
+    .app-wrapper { gap: 0; max-width: 100%; margin: 0; width: 100%; }
+    .container { border-radius: 0; width: 100%; min-height: 100dvh; box-shadow: none; }
+    .sticky-header { border-radius: 0; }
+  }
+
+  /* Tablet & small desktop layout adjustments (≤1024px) */
+  @media (max-width: 1024px) {
+    .sidebar { width: 260px; }
+    .header { padding: 16px 16px; }
+    .header-text h2 { font-size: 18px; }
+    .form-body { padding: 16px 16px; }
+    .table-section { padding: 0 16px 20px; }
     .form-group input, .form-group select { font-size: 15px; padding: 11px 14px; }
     .item-row { grid-template-columns: 1fr 90px 100px 130px auto; gap: 8px; }
   }
 
-  /* Tablet portrait & phone (≤1024px portrait = ≤768px wide typical, use 900px) */
+  /* Tablet portrait & phone (≤900px) */
   @media (max-width: 900px) {
-    body { padding: 0; }
-
-    .app-wrapper { flex-direction: column; gap: 0; width: 100%; }
-
-    .container { border-radius: 0; width: 100%; }
+    .app-wrapper { flex-direction: column; }
 
     /* Sidebars float over content */
     .sidebar {
@@ -795,71 +902,45 @@
       padding: 12px 14px;
       flex-wrap: wrap;
       gap: 6px;
-      border-radius: 0;
     }
     .header-text h2 { font-size: 16px; font-weight: 600; }
     .header-text p { font-size: 10px; margin-top: 2px; }
     #dailyQuote { font-size: 10px; margin-top: 4px; max-width: 100%; }
     .toggle-history-btn { padding: 6px 12px; font-size: 11px; }
-
     .form-body { padding: 12px 12px; }
     .table-section { padding: 0 12px 16px; }
-
-    .form-grid {
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-
+    .form-grid { grid-template-columns: 1fr; gap: 8px; }
     .item-row {
       grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      padding: 8px 10px;
+      gap: 6px; padding: 8px 10px;
     }
     .item-row .picker-btn { grid-column: 1 / -1; font-size: 12px; }
     .item-row .qty        { grid-column: 1; }
     .item-row .unit       { grid-column: 2; }
     .item-row .remarks    { grid-column: 1 / -1; }
     .item-row button[title="Remove"] { grid-column: 1 / -1; justify-self: end; }
-
     .btn-row { flex-direction: column; gap: 6px; }
     .add-btn { width: 100%; text-align: center; font-size: 12px; padding: 8px 12px; }
     .generate-btn { font-size: 13px; padding: 10px; }
-
-    .compile-modal {
-      width: 100%;
-      max-width: 100%;
-      border-radius: 0;
-      max-height: 100vh;
-    }
-    .picker-modal {
-      width: 100%;
-      max-width: 100%;
-      border-radius: 0;
-      max-height: 100vh;
-    }
+    .compile-modal { width: 100%; max-width: 100%; border-radius: 0; max-height: 100vh; }
+    .picker-modal  { width: 100%; max-width: 100%; border-radius: 0; max-height: 100vh; }
     .picker-body { grid-template-columns: 1fr; }
     .picker-search { max-width: 100%; font-size: 12px; }
-
     .compile-modal-body { padding: 12px 12px; }
     .compile-modal-footer { padding: 10px 12px; flex-wrap: wrap; gap: 6px; }
     .compile-modal-footer button { flex: 1; font-size: 11px; }
-    
     table { font-size: 12px; }
     thead th { padding: 8px 8px; font-size: 11px; }
     tbody td { padding: 7px 8px; font-size: 11px; }
     .status-select { font-size: 11px; padding: 4px 6px; }
-    
     .compile-btn, .send-history-btn { padding: 8px 14px; font-size: 12px; }
     #scrollTopBtn { width: 38px; height: 38px; font-size: 16px; }
   }
 
   /* Phone portrait (≤480px) */
   @media (max-width: 480px) {
-    body { padding: 0; }
-    .header-text h2 { font-size: 14px; font-weight: 600; letter-spacing: 0; }
-    .header-text p { font-size: 10px; margin-top: 2px; }
-    #dailyQuote { font-size: 10px; margin-top: 4px; max-width: 100%; }
     .sidebar { width: 100% !important; }
+    .header-text h2 { font-size: 14px; letter-spacing: 0; }
     .form-body { padding: 10px 10px; }
     .table-section { padding: 0 10px 12px; }
     .form-grid { gap: 8px; margin-bottom: 12px; }
@@ -870,7 +951,6 @@
     .item-row .picker-btn { grid-column: 1 / -1; font-size: 12px; padding: 6px 8px; }
     .item-row .qty, .item-row .unit { font-size: 12px; padding: 6px 8px; }
     .item-row .remarks { grid-column: 1 / -1; font-size: 12px; padding: 6px 8px; }
-    .item-row button { font-size: 14px; }
     .btn-row { gap: 6px; }
     .add-btn { padding: 8px 14px; font-size: 12px; }
     .generate-btn { padding: 10px; font-size: 13px; }
@@ -880,11 +960,6 @@
     .status-select { font-size: 10px; padding: 3px 6px; }
     .compile-btn, .send-history-btn { padding: 7px 12px; font-size: 12px; }
     .toggle-history-btn { padding: 6px 10px; font-size: 11px; }
-    #hideHeaderBtn { padding: 6px 8px; font-size: 14px; }
-    #restoreHeaderBtn { padding: 6px 10px; font-size: 14px; top: 8px; }
-    #calcBtn { padding: 6px 10px; font-size: 14px; top: 48px; }
-    .compile-modal { width: 98%; max-width: 98%; }
-    .picker-modal { width: 98%; max-width: 98%; }
     .compile-modal-header h3 { font-size: 14px; }
     .compile-modal-body { padding: 10px 12px; }
     .compile-modal-footer { padding: 8px 12px; gap: 6px; }
@@ -943,8 +1018,6 @@
     .compile-btn, .send-history-btn { padding: 6px 10px; font-size: 11px; }
     .toggle-history-btn { padding: 5px 8px; font-size: 10px; }
     #scrollTopBtn { width: 32px; height: 32px; font-size: 14px; }
-    #restoreHeaderBtn, #calcBtn { padding: 5px 8px; font-size: 12px; }
-    #calcBtn { top: 44px; }
     #calcPanel { width: 180px; top: 84px; }
     #calcDisplay { font-size: 16px; padding: 6px 8px; min-height: 36px; }
     .sidebar { width: 240px !important; }
@@ -1078,7 +1151,6 @@
     <div style="display:flex;gap:8px;align-items:center;">
       <button id="btnProducts" class="toggle-history-btn" onclick="toggleProductsSidebar()">🛒 Products</button>
       <button id="btnHistory" class="toggle-history-btn" onclick="toggleSidebar()">📋 History</button>
-      <button id="hideHeaderBtn" onclick="hideHeader()" title="Hide header" style="background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.4);color:white;padding:8px 10px;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.2s;opacity:0;pointer-events:none;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">✕</button>
     </div>
   </div>
   </div>
@@ -1187,8 +1259,19 @@
 
 </div> <!-- /.container -->
 
-<button id="restoreHeaderBtn" onclick="restoreHeader()" title="Show Header">📦</button>
 <button id="calcBtn" onclick="toggleCalc()" title="Calculator">🧮</button>
+<button id="btnProducts_float" onclick="toggleProductsSidebar()" title="Products">&#x1F6D2;</button>
+<button id="btnHistory_float" onclick="toggleSidebar()" title="History">📋</button>
+
+<!-- MOBILE FLOATING MENU -->
+<div id="mobileFloatMenu" class="snapped-right">
+  <button id="mobileFloatToggle" onclick="toggleMobileMenu()" title="Menu">☰</button>
+  <div id="mobileFloatItems">
+    <button class="mobile-float-btn" onclick="toggleCalc()" title="Calculator">🧮</button>
+    <button class="mobile-float-btn" id="mobileBtnProducts" onclick="toggleProductsSidebar()" title="Products">🛒</button>
+    <button class="mobile-float-btn" id="mobileBtnHistory" onclick="toggleSidebar()" title="History">&#x1F4CB;</button>
+  </div>
+</div>
 
 <!-- CALCULATOR -->
 <div id="calcPanel" style="display:none;position:fixed;top:90px;right:0;z-index:400;background:#fff;border-radius:16px 0 0 16px;box-shadow:-4px 4px 24px rgba(0,0,0,0.3);width:240px;overflow:hidden;">
@@ -1467,6 +1550,15 @@
     }
   }
 
+  // Keyboard support for PIN (desktop only — phone uses on-screen keypad)
+  document.addEventListener('keydown', function(e) {
+    const overlay = document.getElementById('pinOverlay');
+    if (!overlay || overlay.style.display === 'none') return;
+    if (e.key >= '0' && e.key <= '9') pinPress(e.key);
+    else if (e.key === 'Backspace') pinBack();
+    else if (e.key === 'Escape') pinClear();
+  });
+
   function todayLocal() {
     const d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -1481,7 +1573,6 @@
     loadRecordsFromFirestore();
     renderHistory();
     addItem();
-    if (sessionStorage.getItem('header_hidden') === '1') hideHeader();
   }
 
   // Start by loading PIN then showing lock screen
@@ -1573,44 +1664,30 @@
   }
 
   function updateSidebarSide() {
-    const anyOpen = document.getElementById("productsSidebar").classList.contains("visible")
-                 || document.getElementById("historySidebar").classList.contains("visible");
+    const pOpen = document.getElementById("productsSidebar").classList.contains("visible");
+    const hOpen = document.getElementById("historySidebar").classList.contains("visible");
+    const anyOpen = pOpen || hOpen;
     document.body.classList.toggle("sidebar-open", anyOpen);
+    document.body.classList.toggle("products-open", pOpen);
+    document.body.classList.toggle("history-open", hOpen);
+
     const panel = document.getElementById("calcPanel");
-    if (anyOpen) {
-      panel.style.right = 'auto'; panel.style.left = '0';
-      panel.style.borderRadius = '0 16px 16px 0';
-      panel.style.boxShadow = '4px 4px 24px rgba(0,0,0,0.3)';
-    } else {
-      panel.style.left = 'auto'; panel.style.right = '0';
-      panel.style.borderRadius = '16px 0 0 16px';
-      panel.style.boxShadow = '-4px 4px 24px rgba(0,0,0,0.3)';
-    }
-    // Also reposition floating Products/History buttons if header is hidden
-    const headerHidden = document.querySelector('.sticky-header').style.display === 'none';
-    if (headerHidden) {
-      ['btnProducts','btnHistory'].forEach((id, i) => {
-        const btn = document.getElementById(id);
-        if (!btn.dataset.wasInHeader) return;
-        if (anyOpen) {
-          btn.style.right = 'auto'; 
-          btn.style.left = '0';
-          btn.style.borderRadius = '0 20px 20px 0';
-          btn.style.boxShadow = '3px 3px 16px rgba(0,0,0,0.3)';
-        } else {
-          btn.style.left = 'auto'; 
-          btn.style.right = '0';
-          btn.style.borderRadius = '20px 0 0 20px';
-          btn.style.boxShadow = '-3px 3px 16px rgba(0,0,0,0.3)';
-        }
-      });
+    if (panel) {
+      if (anyOpen) {
+        panel.style.right = 'auto'; panel.style.left = '0';
+        panel.style.borderRadius = '0 16px 16px 0';
+        panel.style.boxShadow = '4px 4px 24px rgba(0,0,0,0.3)';
+      } else {
+        panel.style.left = 'auto'; panel.style.right = '0';
+        panel.style.borderRadius = '16px 0 0 16px';
+        panel.style.boxShadow = '-4px 4px 24px rgba(0,0,0,0.3)';
+      }
     }
   }
 
   function toggleProductsSidebar() {
     const sidebar = document.getElementById("productsSidebar");
     sidebar.classList.toggle("visible");
-    document.getElementById("btnProducts").style.display = sidebar.classList.contains("visible") ? "none" : "";
     updateBackdrop();
     updateSidebarWidths();
     updateSidebarSide();
@@ -2360,7 +2437,6 @@
   function toggleSidebar() {
     const sidebar = document.getElementById("historySidebar");
     sidebar.classList.toggle("visible");
-    document.getElementById("btnHistory").style.display = sidebar.classList.contains("visible") ? "none" : "";
     updateBackdrop();
     updateSidebarWidths();
     updateSidebarSide();
@@ -2385,8 +2461,6 @@
     document.getElementById("productsSidebar").classList.remove("visible");
     document.getElementById("historySidebar").classList.remove("visible");
     document.getElementById("sidebarBackdrop").classList.remove("visible");
-    document.getElementById("btnProducts").style.display = "";
-    document.getElementById("btnHistory").style.display = "";
     updateSidebarWidths();
     updateSidebarSide();
   }
@@ -2475,18 +2549,17 @@
     updatePendingBadge();
   }
 
-  // ─── STICKY HEADER ─────────────────────────────────────────────────
+  // ─── DESKTOP SCROLL ICONS ─────────────────────────────────────────
   (function() {
     const header = document.querySelector('.sticky-header');
-    const hideBtn = document.getElementById('hideHeaderBtn');
-    const container = document.querySelector('.container');
 
     function onScroll() {
-      const stuck = window.scrollY > 28;
-      header.classList.toggle('is-stuck', stuck);
-      container.style.borderRadius = stuck ? '0 0 16px 16px' : '16px';
-      hideBtn.style.opacity = stuck ? '1' : '0';
-      hideBtn.style.pointerEvents = stuck ? 'all' : 'none';
+      if (window.innerWidth <= 1024) return; // mobile/tablet handled by mobile menu
+      const scrolled = window.scrollY > (header ? header.offsetHeight : 80);
+
+      // Products & History float icons appear only when scrolled past header
+      document.getElementById('btnProducts_float').classList.toggle('scroll-show', scrolled);
+      document.getElementById('btnHistory_float').classList.toggle('scroll-show', scrolled);
     }
 
     let ticking = false;
@@ -2499,65 +2572,155 @@
     onScroll();
   })();
 
-  function hideHeader() {
-    document.querySelector('.sticky-header').style.display = 'none';
-    document.getElementById('restoreHeaderBtn').style.display = 'block';
-    sessionStorage.setItem('header_hidden', '1');
-
-    ['btnProducts','btnHistory'].forEach((id, i) => {
-      const btn = document.getElementById(id);
-      if (btn.style.display === 'none') return;
-      btn.dataset.wasInHeader = '1';
-      btn.dataset.origText = btn.innerHTML;
-      // icon only
-      btn.innerHTML = id === 'btnProducts' ? '🛒' : '📋';
-      btn.title = id === 'btnProducts' ? 'Products' : 'History';
-      btn.style.cssText = `
-        position:fixed;
-        top:${92 + i * 40}px;
-        right:0; left:auto;
-        border-radius:20px 0 0 20px;
-        z-index:60;
-        background:linear-gradient(135deg,#b45309,#f59e0b);
-        color:white;
-        border:none;
-        padding:8px 12px 8px 10px;
-        font-size:16px;
-        cursor:pointer;
-        box-shadow:-3px 3px 16px rgba(0,0,0,0.3);
-        transition:all 0.2s ease;
-      `;
-      document.body.appendChild(btn);
-    });
-    updateSidebarSide();
-  }
-
-  function restoreHeader() {
-    document.querySelector('.sticky-header').style.display = '';
-    document.getElementById('restoreHeaderBtn').style.display = 'none';
-    document.getElementById('calcBtn').style.display = '';
-    sessionStorage.removeItem('header_hidden');
-
-    const btnRow = document.getElementById('hideHeaderBtn').closest('div');
-    ['btnProducts','btnHistory'].forEach(id => {
-      const btn = document.getElementById(id);
-      if (!btn.dataset.wasInHeader) return;
-      btn.innerHTML = btn.dataset.origText;
-      delete btn.dataset.wasInHeader;
-      delete btn.dataset.origText;
-      btn.style.cssText = '';
-      btn.style.display = '';
-      btnRow.insertBefore(btn, document.getElementById('hideHeaderBtn'));
-    });
-    
-    updateSidebarSide();
-  }
-
   // ─── SERVICE WORKER ────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js')
       .catch(err => console.log('SW registration failed:', err));
   }
+
+  // ─── MOBILE FLOATING MENU ──────────────────────────────────────────
+  // Show mobile menu only when scrolled past header
+  (function() {
+    const menu = document.getElementById('mobileFloatMenu');
+    if (!menu) return;
+    function checkScroll() {
+      const header = document.getElementById('stickyHeader');
+      if (!header) return;
+      const headerBottom = header.getBoundingClientRect().bottom;
+      menu.classList.toggle('scroll-visible', headerBottom < 0);
+    }
+    window.addEventListener('scroll', checkScroll, { passive: true });
+    checkScroll();
+  })();
+
+  function toggleMobileMenu() {
+    const items = document.getElementById('mobileFloatItems');
+    const toggle = document.getElementById('mobileFloatToggle');
+    const isOpen = items.classList.toggle('open');
+    toggle.innerHTML = isOpen ? '✕' : '☰';
+  }
+
+  function closeMobileMenu() {
+    const items = document.getElementById('mobileFloatItems');
+    const toggle = document.getElementById('mobileFloatToggle');
+    items.classList.remove('open');
+    toggle.innerHTML = '☰';
+  }
+
+  // ─── DRAG TO MOVE (iPhone AssistiveTouch style) ─────────────────────
+  (function() {
+    const menu = document.getElementById('mobileFloatMenu');
+    if (!menu) return;
+
+    let dragging = false;
+    let startX, startY, startLeft, startTop;
+    let moved = false;
+
+    // Load saved position — re-snap to nearest edge for current screen size
+    const saved = JSON.parse(localStorage.getItem('floatMenuPos') || 'null');
+    if (saved) {
+      // Determine which edge it was snapped to, apply for current screen width
+      const snapLeft = saved.left < (saved.screenWidth || window.innerWidth) / 2;
+      const finalLeft = snapLeft ? 0 : window.innerWidth - 44;
+      const finalTop  = Math.max(0, Math.min(window.innerHeight - 44, saved.top));
+      menu.style.left  = finalLeft + 'px';
+      menu.style.top   = finalTop  + 'px';
+      menu.style.right = 'auto';
+      _applySnapStyle(menu, finalLeft);
+    } else {
+      // No saved position — default to right edge, let CSS right:0 handle it
+      menu.classList.add('snapped-right');
+      menu.classList.remove('snapped-left');
+      menu.style.alignItems = 'flex-end';
+    }
+
+    function _applySnapStyle(el, leftPx) {
+      const snapLeft = leftPx < window.innerWidth / 2;
+      el.classList.toggle('snapped-left', snapLeft);
+      el.classList.toggle('snapped-right', !snapLeft);
+      el.style.alignItems = snapLeft ? 'flex-start' : 'flex-end';
+    }
+
+    function _restorePillShape(toggle, snapLeft) {
+      // Remove dragging class — CSS pill rules take over automatically
+      menu.classList.remove('is-dragging');
+    }
+
+    function onStart(e) {
+      const touch = e.touches ? e.touches[0] : e;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      const rect = menu.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop  = rect.top;
+      dragging = true;
+      moved = false;
+      menu.style.transition = 'none';
+    }
+
+    function onMove(e) {
+      if (!dragging) return;
+      const touch = e.touches ? e.touches[0] : e;
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        if (!moved) {
+          // Just started dragging — add dragging class for circle shape
+          moved = true;
+          menu.classList.add('is-dragging');
+          closeMobileMenu();
+        }
+      }
+      if (!moved) return;
+      e.preventDefault();
+      const newLeft = Math.max(0, Math.min(window.innerWidth - 44, startLeft + dx));
+      const newTop  = Math.max(0, Math.min(window.innerHeight - 44, startTop + dy));
+      menu.style.left  = newLeft + 'px';
+      menu.style.top   = newTop  + 'px';
+      menu.style.right = 'auto';
+      _applySnapStyle(menu, newLeft);
+    }
+
+    function onEnd(e) {
+      if (!dragging) return;
+      dragging = false;
+
+      const toggle = document.getElementById('mobileFloatToggle');
+      menu.style.transition = '';
+
+      if (!moved) {
+        // It was a tap — restore shape just in case
+        return;
+      }
+
+      // Snap to nearest edge
+      const rect = menu.getBoundingClientRect();
+      const snapLeft = rect.left < window.innerWidth / 2;
+      const finalLeft = snapLeft ? 0 : window.innerWidth - 44;
+      const finalTop = Math.max(0, Math.min(window.innerHeight - 44, rect.top));
+
+      menu.style.left = finalLeft + 'px';
+      menu.style.top  = finalTop  + 'px';
+      menu.style.right = 'auto';
+      _applySnapStyle(menu, finalLeft);
+
+      // Restore pill shape — clear all inline styles so CSS classes take over
+      _restorePillShape(toggle, snapLeft);
+
+      // Save position with screen width for cross-device snap restoration
+      localStorage.setItem('floatMenuPos', JSON.stringify({ left: finalLeft, top: finalTop, screenWidth: window.innerWidth }));
+    }
+
+    // Touch events
+    menu.addEventListener('touchstart', onStart, { passive: true });
+    menu.addEventListener('touchmove',  onMove,  { passive: false });
+    menu.addEventListener('touchend',   onEnd);
+
+    // Mouse events (for desktop testing)
+    menu.addEventListener('mousedown', onStart);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onEnd);
+  })();
 
   // ─── CALCULATOR ────────────────────────────────────────────────────
   let calcExpr = '';
