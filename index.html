@@ -9,21 +9,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="STR System">
+<script>if(sessionStorage.getItem('header_hidden')==='1')document.write('<style>#stickyHeader{display:none}</style>')</script>
 <style>
   /* ── SMOOTH TRANSITIONS ── */
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   html { scroll-behavior: smooth; }
-
-  .container {
-    background: #fff;
-    border-radius: 16px;
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    transition: box-shadow 0.3s;
-  }
 
   /* Buttons — snappier feel */
   button { transition: all 0.18s ease; }
@@ -36,6 +27,7 @@
     transform: scale(0.95) translateY(10px);
     transition: transform 0.25s ease, opacity 0.25s ease;
     opacity: 0;
+    will-change: transform, opacity;
   }
   .compile-overlay.visible .compile-modal { transform: scale(1) translateY(0); opacity: 1; }
 
@@ -54,6 +46,7 @@
     transform: translateX(30px);
     opacity: 0;
     transition: transform 0.25s ease, opacity 0.25s ease, width 0.25s ease;
+    will-change: transform, opacity;
   }
   .sidebar.visible { transform: translateX(0); opacity: 1; }
 
@@ -109,7 +102,7 @@
     font-family: 'Segoe UI', Arial, sans-serif;
     background: linear-gradient(135deg, #1a1200 0%, #2d1f00 50%, #7a4f00 100%);
     min-height: 100vh;
-    padding: 30px 20px;
+    padding: 30px 20px 30px;
     overflow-x: hidden;
   }
 
@@ -128,10 +121,8 @@
     border-radius: 16px;
     flex: 1;
     min-width: 0;
-    overflow: hidden;
+    overflow: clip;
     box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    display: flex;
-    flex-direction: column;
   }
 
   @media (max-width: 1100px) {
@@ -141,18 +132,83 @@
   }
 
   .header {
-    background: linear-gradient(135deg, #b45309, #f59e0b);
-    padding: 28px 32px;
+    background: transparent;
+    padding: 20px 32px;
     color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* Sticky header bar that follows scroll */
+  .sticky-header {
     position: sticky;
     top: 0;
     z-index: 50;
+    background: linear-gradient(135deg, #b45309, #f59e0b);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    border-radius: 16px 16px 0 0;
+    will-change: border-radius;
+  }
+  .sticky-header.is-stuck {
+    border-radius: 0;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
   }
 
-  .header-text h2 { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+  /* Restore sticky header button */
+  #restoreHeaderBtn {
+    position: fixed;
+    top: 12px;
+    right: 0;
+    left: auto;
+    z-index: 60;
+    background: linear-gradient(135deg, #b45309, #f59e0b);
+    color: white;
+    border: none;
+    border-radius: 20px 0 0 20px;
+    padding: 8px 12px 8px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: -3px 3px 16px rgba(0,0,0,0.3);
+    display: none;
+    transition: left 0.25s ease, right 0.25s ease;
+  }
+  #restoreHeaderBtn:hover { opacity: 0.95; }
+
+  #calcBtn {
+    position: fixed;
+    top: 52px;
+    right: 0;
+    left: auto;
+    z-index: 60;
+    background: linear-gradient(135deg, #b45309, #f59e0b);
+    color: white;
+    border: none;
+    border-radius: 20px 0 0 20px;
+    padding: 8px 12px 8px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: -3px 3px 16px rgba(0,0,0,0.3);
+    transition: left 0.25s ease, right 0.25s ease;
+  }
+  #calcBtn:hover { opacity: 0.95; }
+
+  /* When sidebar open — flip to left */
+  body.sidebar-open #restoreHeaderBtn,
+  body.sidebar-open #calcBtn {
+    right: auto;
+    left: 0;
+    border-radius: 0 20px 20px 0;
+    box-shadow: 3px 3px 16px rgba(0,0,0,0.3);
+  }
+  body.sidebar-open #calcPanel {
+    right: auto;
+    left: 0;
+    border-radius: 0 16px 16px 0;
+    box-shadow: 4px 4px 24px rgba(0,0,0,0.3);
+  }  .header-text h2 { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
   .header-text p  { font-size: 13px; opacity: 0.8; margin-top: 4px; }
 
   .toggle-history-btn {
@@ -169,7 +225,7 @@
   }
   .toggle-history-btn:hover { background: rgba(255,255,255,0.25); }
 
-  .form-body { padding: 28px 32px; flex: 1; overflow-y: auto; }
+  .form-body { padding: 28px 32px; }
 
   .form-grid {
     display: grid;
@@ -251,7 +307,7 @@
   }
   .generate-btn:hover { opacity: 0.9; }
 
-  .table-section { padding: 0 32px 32px; flex: 1; overflow-y: auto; }
+  .table-section { padding: 0 32px 32px; }
 
   .table-actions {
     display: flex;
@@ -736,35 +792,38 @@
       box-shadow: -4px 0 30px rgba(0,0,0,0.4);
     }
     .header {
-      padding: 14px 16px;
+      padding: 12px 14px;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
       border-radius: 0;
     }
-    .header-text h2 { font-size: 17px; }
-    .header-text p { font-size: 11px; }
-    .toggle-history-btn { padding: 6px 12px; font-size: 12px; }
+    .header-text h2 { font-size: 16px; font-weight: 600; }
+    .header-text p { font-size: 10px; margin-top: 2px; }
+    #dailyQuote { font-size: 10px; margin-top: 4px; max-width: 100%; }
+    .toggle-history-btn { padding: 6px 12px; font-size: 11px; }
 
-    .form-body { padding: 14px 14px; }
-    .table-section { padding: 0 14px 18px; }
+    .form-body { padding: 12px 12px; }
+    .table-section { padding: 0 12px 16px; }
 
     .form-grid {
       grid-template-columns: 1fr;
-      gap: 10px;
+      gap: 8px;
     }
 
     .item-row {
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 6px;
+      padding: 8px 10px;
     }
-    .item-row .picker-btn { grid-column: 1 / -1; }
+    .item-row .picker-btn { grid-column: 1 / -1; font-size: 12px; }
     .item-row .qty        { grid-column: 1; }
     .item-row .unit       { grid-column: 2; }
     .item-row .remarks    { grid-column: 1 / -1; }
     .item-row button[title="Remove"] { grid-column: 1 / -1; justify-self: end; }
 
-    .btn-row { flex-direction: column; gap: 8px; }
-    .add-btn { width: 100%; text-align: center; }
+    .btn-row { flex-direction: column; gap: 6px; }
+    .add-btn { width: 100%; text-align: center; font-size: 12px; padding: 8px 12px; }
+    .generate-btn { font-size: 13px; padding: 10px; }
 
     .compile-modal {
       width: 100%;
@@ -779,19 +838,135 @@
       max-height: 100vh;
     }
     .picker-body { grid-template-columns: 1fr; }
-    .picker-search { max-width: 100%; }
+    .picker-search { max-width: 100%; font-size: 12px; }
 
-    .compile-modal-body { padding: 12px 14px; }
-    .compile-modal-footer { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
-    .compile-modal-footer button { flex: 1; }
+    .compile-modal-body { padding: 12px 12px; }
+    .compile-modal-footer { padding: 10px 12px; flex-wrap: wrap; gap: 6px; }
+    .compile-modal-footer button { flex: 1; font-size: 11px; }
+    
+    table { font-size: 12px; }
+    thead th { padding: 8px 8px; font-size: 11px; }
+    tbody td { padding: 7px 8px; font-size: 11px; }
+    .status-select { font-size: 11px; padding: 4px 6px; }
+    
+    .compile-btn, .send-history-btn { padding: 8px 14px; font-size: 12px; }
+    #scrollTopBtn { width: 38px; height: 38px; font-size: 16px; }
   }
 
   /* Phone portrait (≤480px) */
   @media (max-width: 480px) {
-    .header-text h2 { font-size: 15px; }
+    body { padding: 0; }
+    .header-text h2 { font-size: 14px; font-weight: 600; letter-spacing: 0; }
+    .header-text p { font-size: 10px; margin-top: 2px; }
+    #dailyQuote { font-size: 10px; margin-top: 4px; max-width: 100%; }
     .sidebar { width: 100% !important; }
-    .form-body { padding: 12px 12px; }
-    .table-section { padding: 0 12px 14px; }
+    .form-body { padding: 10px 10px; }
+    .table-section { padding: 0 10px 12px; }
+    .form-grid { gap: 8px; margin-bottom: 12px; }
+    .form-group label { font-size: 11px; }
+    .form-group input, .form-group select { padding: 8px 10px; font-size: 13px; }
+    .section-title { font-size: 12px; margin-bottom: 8px; padding-bottom: 4px; }
+    .item-row { grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px 10px; }
+    .item-row .picker-btn { grid-column: 1 / -1; font-size: 12px; padding: 6px 8px; }
+    .item-row .qty, .item-row .unit { font-size: 12px; padding: 6px 8px; }
+    .item-row .remarks { grid-column: 1 / -1; font-size: 12px; padding: 6px 8px; }
+    .item-row button { font-size: 14px; }
+    .btn-row { gap: 6px; }
+    .add-btn { padding: 8px 14px; font-size: 12px; }
+    .generate-btn { padding: 10px; font-size: 13px; }
+    table { font-size: 11px; min-width: 100%; }
+    thead th { padding: 6px 6px; font-size: 10px; }
+    tbody td { padding: 6px 6px; font-size: 11px; }
+    .status-select { font-size: 10px; padding: 3px 6px; }
+    .compile-btn, .send-history-btn { padding: 7px 12px; font-size: 12px; }
+    .toggle-history-btn { padding: 6px 10px; font-size: 11px; }
+    #hideHeaderBtn { padding: 6px 8px; font-size: 14px; }
+    #restoreHeaderBtn { padding: 6px 10px; font-size: 14px; top: 8px; }
+    #calcBtn { padding: 6px 10px; font-size: 14px; top: 48px; }
+    .compile-modal { width: 98%; max-width: 98%; }
+    .picker-modal { width: 98%; max-width: 98%; }
+    .compile-modal-header h3 { font-size: 14px; }
+    .compile-modal-body { padding: 10px 12px; }
+    .compile-modal-footer { padding: 8px 12px; gap: 6px; }
+    .modal-close-btn, .modal-send-btn { padding: 6px 12px; font-size: 11px; }
+    .sidebar-header { padding: 12px 14px; font-size: 12px; }
+    .sidebar-body { padding: 8px; }
+    .history-group-header { padding: 7px 10px; font-size: 11px; }
+    .history-item { padding: 6px 10px; font-size: 11px; }
+    .prod-cat-title { font-size: 10px; padding: 6px 0 2px; }
+    .prod-item { padding: 4px 6px; font-size: 11px; margin-bottom: 3px; }
+    .prod-add-form { padding: 8px 10px; gap: 5px; }
+    .prod-add-form input, .prod-add-form select { padding: 6px 8px; font-size: 12px; }
+    .prod-add-btn { padding: 6px; font-size: 11px; }
+    .picker-header { padding: 12px 14px; gap: 8px; }
+    .picker-header h3 { font-size: 13px; }
+    .picker-search { padding: 6px 10px; font-size: 12px; max-width: 100%; }
+    .picker-body { padding: 10px; gap: 10px; }
+    .picker-col-title { font-size: 10px; padding-bottom: 4px; }
+    .product-chip { padding: 4px 10px; font-size: 11px; }
+    .picker-btn { padding: 6px 10px; font-size: 11px; }
+    #scrollTopBtn { width: 36px; height: 36px; font-size: 16px; }
+    .pin-box { padding: 30px 24px; width: 280px; }
+    .pin-box h2 { font-size: 18px; }
+    .pin-box p { font-size: 12px; }
+    .pin-dots { gap: 10px; margin-bottom: 18px; }
+    .pin-dot { width: 16px; height: 16px; }
+    .pin-keypad { gap: 8px; }
+    .pin-key { padding: 12px; font-size: 16px; }
+    #calcPanel { width: 200px; top: 88px; }
+    #calcDisplay { font-size: 18px; padding: 8px 10px; min-height: 40px; }
+    #calcPanel button { font-size: 12px; padding: 8px; }
+  }
+
+  /* Phone landscape (≤768px width AND ≤500px height) */
+  @media (max-width: 768px) and (max-height: 500px) {
+    body { padding: 0; }
+    .header { padding: 10px 12px; }
+    .header-text h2 { font-size: 13px; }
+    .header-text p { font-size: 9px; margin-top: 1px; }
+    #dailyQuote { display: none; }
+    .form-body { padding: 8px 10px; }
+    .form-grid { gap: 6px; margin-bottom: 8px; }
+    .form-group label { font-size: 10px; }
+    .form-group input, .form-group select { padding: 6px 8px; font-size: 12px; }
+    .section-title { font-size: 11px; margin-bottom: 6px; }
+    .item-row { grid-template-columns: 1fr 80px 80px 100px auto; gap: 5px; padding: 6px 8px; }
+    .item-row select, .item-row input { padding: 5px 6px; font-size: 11px; }
+    .btn-row { gap: 5px; margin-top: 6px; }
+    .add-btn { padding: 6px 12px; font-size: 11px; }
+    .generate-btn { padding: 8px; font-size: 12px; }
+    .table-section { padding: 0 10px 10px; }
+    table { font-size: 10px; }
+    thead th { padding: 5px 4px; font-size: 9px; }
+    tbody td { padding: 5px 4px; font-size: 10px; }
+    .status-select { font-size: 9px; padding: 2px 4px; }
+    .compile-btn, .send-history-btn { padding: 6px 10px; font-size: 11px; }
+    .toggle-history-btn { padding: 5px 8px; font-size: 10px; }
+    #scrollTopBtn { width: 32px; height: 32px; font-size: 14px; }
+    #restoreHeaderBtn, #calcBtn { padding: 5px 8px; font-size: 12px; }
+    #calcBtn { top: 44px; }
+    #calcPanel { width: 180px; top: 84px; }
+    #calcDisplay { font-size: 16px; padding: 6px 8px; min-height: 36px; }
+    .sidebar { width: 240px !important; }
+    .sidebar-header { padding: 10px 12px; font-size: 11px; }
+    .sidebar-body { padding: 6px; }
+    .history-group-header { padding: 6px 8px; font-size: 10px; }
+    .history-item { padding: 5px 8px; font-size: 10px; }
+    .prod-item { padding: 3px 6px; font-size: 10px; }
+    .prod-add-form { padding: 6px 8px; gap: 4px; }
+    .prod-add-form input, .prod-add-form select { padding: 5px 6px; font-size: 11px; }
+    .prod-add-btn { padding: 5px; font-size: 10px; }
+    .picker-modal { width: 96%; }
+    .picker-header { padding: 10px 12px; }
+    .picker-header h3 { font-size: 12px; }
+    .picker-search { font-size: 11px; }
+    .picker-body { padding: 8px; gap: 8px; }
+    .product-chip { padding: 3px 8px; font-size: 10px; }
+    .compile-modal { width: 96%; }
+    .compile-modal-header h3 { font-size: 13px; }
+    .compile-modal-body { padding: 8px 10px; }
+    .compile-table { font-size: 10px; }
+    .compile-table th, .compile-table td { padding: 4px 6px; }
   }  /* ── PIN LOCK ── */
   .pin-overlay {
     position: fixed;
@@ -892,6 +1067,7 @@
 
 <div class="container">
 
+  <div class="sticky-header" id="stickyHeader">
   <div class="header">
     <div class="header-text">
       <h2>📦 STR Monitoring System</h2>
@@ -899,10 +1075,12 @@
       <p style="font-size:11px;opacity:0.6;margin-top:6px;">Created for Jeffrey Tayobong</p>
       <p id="dailyQuote" style="font-size:11px;opacity:0.75;margin-top:8px;font-style:italic;max-width:420px;line-height:1.5;"></p>
     </div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;align-items:center;">
       <button id="btnProducts" class="toggle-history-btn" onclick="toggleProductsSidebar()">🛒 Products</button>
       <button id="btnHistory" class="toggle-history-btn" onclick="toggleSidebar()">📋 History</button>
+      <button id="hideHeaderBtn" onclick="hideHeader()" title="Hide header" style="background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.4);color:white;padding:8px 10px;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.2s;opacity:0;pointer-events:none;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">✕</button>
     </div>
+  </div>
   </div>
 
   <div class="form-body">
@@ -972,7 +1150,7 @@
 
   <div class="table-section">
     <div class="table-actions">
-      <div class="section-title" style="margin:0;padding:0;border:none;line-height:2;">STR Records</div>
+      <div class="section-title" style="margin:0;padding:0;border:none;line-height:2;">STR Records <span id="pendingBadge" style="display:none;background:#fff8e1;color:#f59e0b;border:1.5px solid #fde68a;border-radius:20px;font-size:11px;font-weight:700;padding:2px 10px;margin-left:8px;vertical-align:middle;cursor:pointer;transition:all 0.2s;" onclick="togglePendingFilter()" title="Click to filter pending records"></span></div>
       <div style="margin-left:auto;display:flex;gap:10px;">
         <button class="send-history-btn" id="sendHistoryBtn" onclick="sendToHistory()">📋 Send to History</button>
       </div>
@@ -1008,6 +1186,40 @@
   </div>
 
 </div> <!-- /.container -->
+
+<button id="restoreHeaderBtn" onclick="restoreHeader()" title="Show Header">📦</button>
+<button id="calcBtn" onclick="toggleCalc()" title="Calculator">🧮</button>
+
+<!-- CALCULATOR -->
+<div id="calcPanel" style="display:none;position:fixed;top:90px;right:0;z-index:400;background:#fff;border-radius:16px 0 0 16px;box-shadow:-4px 4px 24px rgba(0,0,0,0.3);width:240px;overflow:hidden;">
+  <div style="background:linear-gradient(135deg,#b45309,#f59e0b);padding:12px 16px;color:white;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
+    🧮 Calculator
+    <button onclick="toggleCalc()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px;">✕</button>
+  </div>
+  <div style="padding:12px;">
+    <div id="calcDisplay" style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:20px;font-weight:700;color:#b45309;text-align:right;margin-bottom:10px;min-height:44px;word-break:break-all;">0</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+      <button onclick="calcPress('C')"    style="grid-column:span 2;padding:10px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">C</button>
+      <button onclick="calcPress('⌫')"   style="padding:10px;background:#fff8e1;color:#b45309;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">⌫</button>
+      <button onclick="calcPress('/')"    style="padding:10px;background:#fde68a;color:#b45309;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">÷</button>
+      <button onclick="calcPress('7')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">7</button>
+      <button onclick="calcPress('8')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">8</button>
+      <button onclick="calcPress('9')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">9</button>
+      <button onclick="calcPress('*')"    style="padding:10px;background:#fde68a;color:#b45309;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">×</button>
+      <button onclick="calcPress('4')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">4</button>
+      <button onclick="calcPress('5')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">5</button>
+      <button onclick="calcPress('6')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">6</button>
+      <button onclick="calcPress('-')"    style="padding:10px;background:#fde68a;color:#b45309;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">−</button>
+      <button onclick="calcPress('1')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">1</button>
+      <button onclick="calcPress('2')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">2</button>
+      <button onclick="calcPress('3')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">3</button>
+      <button onclick="calcPress('+')"    style="padding:10px;background:#fde68a;color:#b45309;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">+</button>
+      <button onclick="calcPress('0')"    style="grid-column:span 2;padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">0</button>
+      <button onclick="calcPress('.')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">.</button>
+      <button onclick="calcPress('=')"    style="padding:10px;background:linear-gradient(135deg,#b45309,#f59e0b);color:white;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">=</button>
+    </div>
+  </div>
+</div>
 
 <!-- PRODUCTS SIDEBAR -->
 <div class="sidebar" id="productsSidebar">
@@ -1077,6 +1289,7 @@
     <div class="compile-modal-body" id="historyViewBody"></div>
     <div class="compile-modal-footer">
       <button class="modal-close-btn" onclick="closeHistoryView()">Close</button>
+      <button class="modal-close-btn" id="renameBatchViewBtn" onclick="openRenameHistoryBatch()" style="background:#fff8e1;color:#b45309;border:1.5px solid #fde68a;">📝 Rename</button>
       <button class="modal-close-btn" id="editBatchBtn" onclick="toggleEditBatch()" style="background:#fff8e1;color:#b45309;border:1.5px solid #fde68a;">✏️ Edit</button>
       <button class="modal-send-btn" id="saveBatchBtn" onclick="saveBatchEdits()" style="display:none;">💾 Save</button>
       <button class="modal-send-btn" style="background:#b45309;" onclick="printBatch()">🖨️ Print</button>
@@ -1109,6 +1322,71 @@
   </div>
 </div>
 
+<!-- PENDING WARNING MODAL -->
+<div class="compile-overlay" id="pendingWarningOverlay">
+  <div class="compile-modal" style="max-width:420px;">
+    <div class="compile-modal-header" style="background:linear-gradient(135deg,#b45309,#f59e0b);text-align:center;">
+      <h3 style="margin:0;font-size:18px;">⚠️ Pending Records</h3>
+    </div>
+    <div class="compile-modal-body" style="text-align:center;padding:32px 24px;">
+      <p style="font-size:14px;color:#555;margin-bottom:8px;">You still have</p>
+      <p id="pendingWarningCount" style="font-size:32px;font-weight:700;color:#b45309;margin:0 0 16px 0;"></p>
+      <p style="font-size:13px;color:#888;margin:0;">pending record(s) that need status updates.</p>
+    </div>
+    <div class="compile-modal-footer" style="justify-content:center;gap:12px;">
+      <button class="modal-close-btn" onclick="closePendingWarning()" style="background:#f0f0f0;color:#555;flex:1;">Cancel</button>
+      <button class="modal-send-btn" onclick="proceedWithCompile()" style="background:linear-gradient(135deg,#b45309,#f59e0b);flex:1;">Compile Anyway</button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME BATCH MODAL -->
+<div class="compile-overlay" id="renameBatchOverlay">
+  <div class="compile-modal" style="max-width:480px;">
+    <div class="compile-modal-header" style="background:linear-gradient(135deg,#b45309,#f59e0b);text-align:center;">
+      <h3 style="margin:0;font-size:18px;">📝 Please give it a name</h3>
+    </div>
+    <div class="compile-modal-body" style="padding:28px 24px;">
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Record Name</label>
+        <input type="text" id="renameBatchInput" placeholder="e.g. Morning Transfer, Afternoon Restock" style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;box-sizing:border-box;" onkeydown="if(event.key==='Enter')confirmRenameBatch()">
+      </div>
+      <div style="background:#fff8e1;border:1.5px solid #fde68a;border-radius:8px;padding:12px;font-size:12px;color:#666;">
+        <strong style="color:#b45309;">📅 Created:</strong> <span id="renameBatchDate"></span>
+      </div>
+    </div>
+    <div class="compile-modal-footer" style="justify-content:flex-end;gap:10px;">
+      <button class="modal-close-btn" onclick="closeRenameBatch()" style="background:#f0f0f0;color:#555;">Cancel</button>
+      <button class="modal-send-btn" onclick="confirmRenameBatch()" style="background:linear-gradient(135deg,#b45309,#f59e0b);">Save & Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME HISTORY BATCH MODAL -->
+<div class="compile-overlay" id="renameHistoryBatchOverlay">
+  <div class="compile-modal" style="max-width:480px;">
+    <div class="compile-modal-header" style="background:linear-gradient(135deg,#b45309,#f59e0b);text-align:center;">
+      <h3 style="margin:0;font-size:18px;">📝 Rename Record</h3>
+    </div>
+    <div class="compile-modal-body" style="padding:28px 24px;">
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">New Name</label>
+        <input type="text" id="renameHistoryBatchInput" placeholder="e.g. Morning Transfer, Afternoon Restock" style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;box-sizing:border-box;" onkeydown="if(event.key==='Enter')confirmRenameHistoryBatch()">
+      </div>
+      <div style="background:#fff8e1;border:1.5px solid #fde68a;border-radius:8px;padding:12px;font-size:12px;color:#666;">
+        <strong style="color:#b45309;">📅 Created:</strong> <span id="renameHistoryBatchDate"></span>
+      </div>
+    </div>
+    <div class="compile-modal-footer" style="justify-content:flex-end;gap:10px;">
+      <button class="modal-close-btn" onclick="closeRenameHistoryBatch()" style="background:#f0f0f0;color:#555;">Cancel</button>
+      <button class="modal-send-btn" onclick="confirmRenameHistoryBatch()" style="background:linear-gradient(135deg,#b45309,#f59e0b);">Save Changes</button>
+    </div>
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -1133,6 +1411,8 @@
   let productItems = [];
   let _pickerTargetRow = null;
   const historyBatches = JSON.parse(localStorage.getItem('str_history') || '[]');
+  let pendingFilterActive = false;
+  let pendingRenameBatch = null;
 
   // ─── PIN LOCK ───────────────────────────────────────────────────────
   let pinInput = '';
@@ -1187,13 +1467,21 @@
     }
   }
 
+  function todayLocal() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
   function initApp() {
-    document.getElementById("date").valueAsDate = new Date();
+    const d = new Date();
+    const local = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    document.getElementById("date").value = local;
     restoreFormInputs();
     loadProductsFromFirestore();
     loadRecordsFromFirestore();
     renderHistory();
     addItem();
+    if (sessionStorage.getItem('header_hidden') === '1') hideHeader();
   }
 
   // Start by loading PIN then showing lock screen
@@ -1284,12 +1572,48 @@
     });
   }
 
+  function updateSidebarSide() {
+    const anyOpen = document.getElementById("productsSidebar").classList.contains("visible")
+                 || document.getElementById("historySidebar").classList.contains("visible");
+    document.body.classList.toggle("sidebar-open", anyOpen);
+    const panel = document.getElementById("calcPanel");
+    if (anyOpen) {
+      panel.style.right = 'auto'; panel.style.left = '0';
+      panel.style.borderRadius = '0 16px 16px 0';
+      panel.style.boxShadow = '4px 4px 24px rgba(0,0,0,0.3)';
+    } else {
+      panel.style.left = 'auto'; panel.style.right = '0';
+      panel.style.borderRadius = '16px 0 0 16px';
+      panel.style.boxShadow = '-4px 4px 24px rgba(0,0,0,0.3)';
+    }
+    // Also reposition floating Products/History buttons if header is hidden
+    const headerHidden = document.querySelector('.sticky-header').style.display === 'none';
+    if (headerHidden) {
+      ['btnProducts','btnHistory'].forEach((id, i) => {
+        const btn = document.getElementById(id);
+        if (!btn.dataset.wasInHeader) return;
+        if (anyOpen) {
+          btn.style.right = 'auto'; 
+          btn.style.left = '0';
+          btn.style.borderRadius = '0 20px 20px 0';
+          btn.style.boxShadow = '3px 3px 16px rgba(0,0,0,0.3)';
+        } else {
+          btn.style.left = 'auto'; 
+          btn.style.right = '0';
+          btn.style.borderRadius = '20px 0 0 20px';
+          btn.style.boxShadow = '-3px 3px 16px rgba(0,0,0,0.3)';
+        }
+      });
+    }
+  }
+
   function toggleProductsSidebar() {
     const sidebar = document.getElementById("productsSidebar");
     sidebar.classList.toggle("visible");
     document.getElementById("btnProducts").style.display = sidebar.classList.contains("visible") ? "none" : "";
     updateBackdrop();
     updateSidebarWidths();
+    updateSidebarSide();
   }
 
   // Allow pressing Enter in the product name input
@@ -1461,13 +1785,46 @@
     document.getElementById("itemsContainer").innerHTML = "";
     document.getElementById("strNumber").value = "";
     document.getElementById("refNumber").value = "";
-    document.getElementById("date").valueAsDate = new Date();
+    document.getElementById("date").value = todayLocal();
     document.getElementById("store").value = "";
     localStorage.removeItem("str_form");
     addItem();
+    updatePendingBadge();
   }
 
   // ─── HELPERS ───────────────────────────────────────────────────────
+  function updatePendingBadge() {
+    const pending = document.querySelectorAll('#strTable tbody .status-select.pending').length;
+    const badge = document.getElementById('pendingBadge');
+    if (pending > 0) {
+      badge.textContent = '🟡 ' + pending + ' Pending';
+      badge.style.display = 'inline';
+      badge.style.background = pendingFilterActive ? '#f59e0b' : '#fff8e1';
+      badge.style.color = pendingFilterActive ? '#fff' : '#f59e0b';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function togglePendingFilter() {
+    pendingFilterActive = !pendingFilterActive;
+    const tbody = document.querySelector("#strTable tbody");
+    const rows = tbody.querySelectorAll("tr:not(.empty-row)");
+    
+    if (pendingFilterActive) {
+      // Show only pending rows
+      rows.forEach(row => {
+        const statusSelect = row.querySelector(".status-select.pending");
+        row.style.display = statusSelect ? '' : 'none';
+      });
+      updatePendingBadge();
+    } else {
+      // Show all rows
+      rows.forEach(row => row.style.display = '');
+      updatePendingBadge();
+    }
+  }
+
   function updateStatus(sel) {
     sel.className = "status-select " + sel.value;
     const tr = sel.closest("tr");
@@ -1476,6 +1833,11 @@
       db.collection("str_records").doc(docId)
         .update({ status: sel.value })
         .catch(err => console.error("Status update failed:", err));
+    }
+    updatePendingBadge();
+    // Reapply filter if active
+    if (pendingFilterActive) {
+      tr.style.display = sel.value === 'pending' ? '' : 'none';
     }
   }
 
@@ -1491,6 +1853,7 @@
     if (tbody.rows.length === 0) {
       tbody.innerHTML = `<tr class="empty-row"><td colspan="10">No records yet. Generate an STR to get started.</td></tr>`;
     }
+    updatePendingBadge();
   }
 
   // ─── COMPILE & SEND TO HISTORY ────────────────────────────────────
@@ -1543,6 +1906,30 @@
   }
 
   function compileRecords() {
+    const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
+    if (rows.length === 0) { alert("No records to compile."); return; }
+    
+    const pendingCount = document.querySelectorAll("#strTable tbody .status-select.pending").length;
+    if (pendingCount > 0) {
+      document.getElementById('pendingWarningCount').textContent = pendingCount + ' pending';
+      document.getElementById('pendingWarningOverlay').classList.add('visible');
+      return;
+    }
+    
+    // No pending records, proceed with compile
+    showCompileModal();
+  }
+
+  function closePendingWarning() {
+    document.getElementById('pendingWarningOverlay').classList.remove('visible');
+  }
+
+  function proceedWithCompile() {
+    document.getElementById('pendingWarningOverlay').classList.remove('visible');
+    showCompileModal();
+  }
+
+  function showCompileModal() {
     const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
     if (rows.length === 0) { alert("No records to compile."); return; }
 
@@ -1619,6 +2006,35 @@
         refNumber: cells[7].textContent,
         status:    cells[8].querySelector("select")?.value || 'pending'
       });
+    });
+
+    // Store batch data and show rename dialog
+    pendingRenameBatch = { sentAt: now, rows: batchRows };
+    document.getElementById('renameBatchInput').value = '';
+    document.getElementById('renameBatchDate').textContent = now;
+    document.getElementById('renameBatchOverlay').classList.add('visible');
+    setTimeout(() => document.getElementById('renameBatchInput').focus(), 100);
+  }
+
+  function closeRenameBatch() {
+    document.getElementById('renameBatchOverlay').classList.remove('visible');
+    pendingRenameBatch = null;
+  }
+
+  function confirmRenameBatch() {
+    const customName = document.getElementById('renameBatchInput').value.trim();
+    if (!customName) {
+      alert('Please enter a name for your records.');
+      return;
+    }
+
+    const batch = pendingRenameBatch;
+    const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
+
+    // Update sentAt with custom name
+    batch.sentAt = customName + ' — ' + batch.sentAt;
+
+    rows.forEach(tr => {
       const docId = tr.dataset.docId;
       if (docId) {
         db.collection("str_records").doc(docId)
@@ -1628,7 +2044,7 @@
       tr.remove();
     });
 
-    historyBatches.push({ sentAt: now, rows: batchRows });
+    historyBatches.push(batch);
     localStorage.setItem('str_history', JSON.stringify(historyBatches));
     renderHistory();
 
@@ -1638,9 +2054,13 @@
     }
 
     document.getElementById("historySidebar").classList.add("visible");
+    updateBackdrop();
+    updateSidebarWidths();
+    updateSidebarSide();
     closeCompile();
+    closeRenameBatch();
     document.getElementById("sendHistoryBtn").classList.remove("visible");
-    alert("✅ Records sent to history.");
+    alert("✅ Records saved as '" + customName + "'.");
   }
 
   function renderHistory() {
@@ -1797,6 +2217,53 @@
     currentViewBatchIndex = null;
   }
 
+  function openRenameHistoryBatch() {
+    const batch = historyBatches[currentViewBatchIndex];
+    if (!batch) return;
+    
+    // Extract current name and date from sentAt (format: "Name — Date Time")
+    const parts = batch.sentAt.split(' — ');
+    const currentName = parts[0];
+    const dateTime = parts[1] || '';
+    
+    document.getElementById('renameHistoryBatchInput').value = currentName;
+    document.getElementById('renameHistoryBatchDate').textContent = dateTime;
+    document.getElementById('renameHistoryBatchOverlay').classList.add('visible');
+    setTimeout(() => document.getElementById('renameHistoryBatchInput').focus(), 100);
+  }
+
+  function closeRenameHistoryBatch() {
+    document.getElementById('renameHistoryBatchOverlay').classList.remove('visible');
+  }
+
+  function confirmRenameHistoryBatch() {
+    const newName = document.getElementById('renameHistoryBatchInput').value.trim();
+    if (!newName) {
+      alert('Please enter a name for your records.');
+      return;
+    }
+
+    const batch = historyBatches[currentViewBatchIndex];
+    if (!batch) return;
+
+    // Extract date from current sentAt
+    const parts = batch.sentAt.split(' — ');
+    const dateTime = parts[1] || '';
+
+    // Update sentAt with new name
+    batch.sentAt = newName + ' — ' + dateTime;
+
+    // Save to localStorage
+    localStorage.setItem('str_history', JSON.stringify(historyBatches));
+    renderHistory();
+    
+    // Update the modal title
+    document.getElementById('historyViewTitle').textContent = '📋 ' + newName;
+    
+    closeRenameHistoryBatch();
+    alert("✅ Record renamed to '" + newName + "'.");
+  }
+
   function printBatch() {
     const batch = historyBatches[currentViewBatchIndex];
     if (!batch) return;
@@ -1856,8 +2323,9 @@
       ws['!cols'] = headers.map((h, ci) => ({
         wch: Math.max(h.length, ...rows.map(r => String(r[ci] || '').length)) + 2
       }));
-      const sheetName = `Batch ${i + 1} - ${batch.sentAt.replace(/[/:]/g, '-').substring(0, 20)}`;
-      XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
+      // Use the full sentAt which includes custom name and date
+      const sheetName = batch.sentAt.replace(/[/:]/g, '-').substring(0, 31);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
     });
 
     XLSX.writeFile(wb, `STR_Records_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -1895,6 +2363,7 @@
     document.getElementById("btnHistory").style.display = sidebar.classList.contains("visible") ? "none" : "";
     updateBackdrop();
     updateSidebarWidths();
+    updateSidebarSide();
   }
 
   function updateSidebarWidths() {
@@ -1919,6 +2388,7 @@
     document.getElementById("btnProducts").style.display = "";
     document.getElementById("btnHistory").style.display = "";
     updateSidebarWidths();
+    updateSidebarSide();
   }
 
   // ─── PERSIST FORM INPUTS ───────────────────────────────────────────
@@ -2002,14 +2472,115 @@
     } catch(err) {
       console.error("Failed to load records:", err);
     }
+    updatePendingBadge();
   }
 
-  // ─── SCROLL TO TOP BUTTON ──────────────────────────────────────────
+  // ─── STICKY HEADER ─────────────────────────────────────────────────
+  (function() {
+    const header = document.querySelector('.sticky-header');
+    const hideBtn = document.getElementById('hideHeaderBtn');
+    const container = document.querySelector('.container');
+
+    function onScroll() {
+      const stuck = window.scrollY > 28;
+      header.classList.toggle('is-stuck', stuck);
+      container.style.borderRadius = stuck ? '0 0 16px 16px' : '16px';
+      hideBtn.style.opacity = stuck ? '1' : '0';
+      hideBtn.style.pointerEvents = stuck ? 'all' : 'none';
+    }
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => { onScroll(); ticking = false; });
+        ticking = true;
+      }
+    }, { passive: true });
+    onScroll();
+  })();
+
+  function hideHeader() {
+    document.querySelector('.sticky-header').style.display = 'none';
+    document.getElementById('restoreHeaderBtn').style.display = 'block';
+    sessionStorage.setItem('header_hidden', '1');
+
+    ['btnProducts','btnHistory'].forEach((id, i) => {
+      const btn = document.getElementById(id);
+      if (btn.style.display === 'none') return;
+      btn.dataset.wasInHeader = '1';
+      btn.dataset.origText = btn.innerHTML;
+      // icon only
+      btn.innerHTML = id === 'btnProducts' ? '🛒' : '📋';
+      btn.title = id === 'btnProducts' ? 'Products' : 'History';
+      btn.style.cssText = `
+        position:fixed;
+        top:${92 + i * 40}px;
+        right:0; left:auto;
+        border-radius:20px 0 0 20px;
+        z-index:60;
+        background:linear-gradient(135deg,#b45309,#f59e0b);
+        color:white;
+        border:none;
+        padding:8px 12px 8px 10px;
+        font-size:16px;
+        cursor:pointer;
+        box-shadow:-3px 3px 16px rgba(0,0,0,0.3);
+        transition:all 0.2s ease;
+      `;
+      document.body.appendChild(btn);
+    });
+    updateSidebarSide();
+  }
+
+  function restoreHeader() {
+    document.querySelector('.sticky-header').style.display = '';
+    document.getElementById('restoreHeaderBtn').style.display = 'none';
+    document.getElementById('calcBtn').style.display = '';
+    sessionStorage.removeItem('header_hidden');
+
+    const btnRow = document.getElementById('hideHeaderBtn').closest('div');
+    ['btnProducts','btnHistory'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn.dataset.wasInHeader) return;
+      btn.innerHTML = btn.dataset.origText;
+      delete btn.dataset.wasInHeader;
+      delete btn.dataset.origText;
+      btn.style.cssText = '';
+      btn.style.display = '';
+      btnRow.insertBefore(btn, document.getElementById('hideHeaderBtn'));
+    });
+    
+    updateSidebarSide();
+  }
 
   // ─── SERVICE WORKER ────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js')
       .catch(err => console.log('SW registration failed:', err));
+  }
+
+  // ─── CALCULATOR ────────────────────────────────────────────────────
+  let calcExpr = '';
+
+  function toggleCalc() {
+    const p = document.getElementById('calcPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function calcPress(val) {
+    const display = document.getElementById('calcDisplay');
+    if (val === 'C') { calcExpr = ''; display.textContent = '0'; return; }
+    if (val === '⌫') { calcExpr = calcExpr.slice(0,-1); display.textContent = calcExpr || '0'; return; }
+    if (val === '=') {
+      try {
+        const result = Function('"use strict"; return (' + calcExpr + ')')();
+        calcExpr = String(parseFloat(result.toFixed(10)));
+        display.textContent = calcExpr;
+      } catch { display.textContent = 'Error'; calcExpr = ''; }
+      return;
+    }
+    calcExpr += val;
+    display.textContent = calcExpr;
   }
 
   // ─── DAILY QUOTE ───────────────────────────────────────────────────
