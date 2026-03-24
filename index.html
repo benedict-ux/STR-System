@@ -9,7 +9,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="STR System">
-<script>/* header state handled in initApp */</script>
+<script>
+  // Apply dark mode immediately before paint to avoid flash
+  if (localStorage.getItem('str_dark_mode') === '1') {
+    document.documentElement.classList.add('dark-early');
+  }
+</script>
 <style>
   /* ── SMOOTH TRANSITIONS ── */
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -428,6 +433,14 @@
     transition: opacity 0.2s;
   }
   .compile-btn:hover { opacity: 0.85; }
+
+  /* Print button — outlined variant */
+  .print-btn {
+    background: #fff;
+    color: #b45309;
+    border: 2px solid #b45309;
+  }
+  .print-btn:hover { background: #b45309; color: #fff; opacity: 1; }
 
   .send-history-btn {
     padding: 9px 20px;
@@ -1052,6 +1065,25 @@
   }
   .pin-overlay.hidden { display: none; }
 
+  /* Dark mode PIN screen — applied before JS runs via dark-early on <html> */
+  html.dark-early body {
+    background: #0f0f0f;
+  }
+  html.dark-early .pin-overlay {
+    background: #0f0f0f;
+  }
+  html.dark-early .pin-box {
+    background: #1e1e1e;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  }
+  html.dark-early .pin-box h2 { color: #fff; }
+  html.dark-early .pin-box p  { color: #888; }
+  html.dark-early .pin-dot    { border-color: #444; background: #2a2a2a; }
+  html.dark-early .pin-dot.filled { background: #888; border-color: #888; }
+  html.dark-early .pin-key    { background: #2a2a2a; color: #ddd; border-color: #3a3a3a; }
+  html.dark-early .pin-key:hover { background: #333; color: #fff; }
+  html.dark-early .pin-error  { color: #fca5a5; }
+
   .pin-box {
     background: #fff;
     border-radius: 20px;
@@ -1141,6 +1173,140 @@
   .toast.error {
     background: linear-gradient(135deg, #dc2626, #f87171);
   }
+
+  /* ── CALCULATOR PANEL BASE STYLES ── */
+  #calcPanel {
+    background: #fff;
+  }
+  #calcDragHandle {
+    background: linear-gradient(135deg, #b45309, #f59e0b);
+    padding: 12px 16px;
+  }
+
+  /* ── DARK MODE ── */
+  body.dark { background: #111; }
+  body.dark .container { background: #1c1c1c; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+  body.dark .sticky-header { background: #1a1a1a !important; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+  body.dark .form-body, body.dark .table-section { background: #1c1c1c; }
+  body.dark .form-group label { color: #888; }
+  body.dark .form-group input, body.dark .form-group select,
+  body.dark .item-row input, body.dark .item-row select { background: #2a2a2a; border-color: #3a3a3a; color: #ddd; }
+  body.dark .form-group input:focus, body.dark .form-group select:focus { border-color: #666; background: #333; }
+  body.dark .item-row { background: #242424; border-color: #3a3a3a; }
+  body.dark .section-title { color: #ccc; border-color: #2a2a2a; }
+  body.dark table { color: #ccc; }
+  body.dark thead tr { background: #2a2a2a; }
+  body.dark thead th { color: #ccc; }
+  body.dark tbody tr { border-color: #2a2a2a; }
+  body.dark tbody tr:hover { background: #242424; }
+  body.dark tbody td { color: #bbb; }
+  body.dark .empty-row td { color: #555; }
+  body.dark .send-history-btn { background: #2a2a2a; color: #ccc; border-color: #555; }
+  /* Buttons */
+  body.dark .compile-btn { background: #2a2a2a !important; color: #ccc !important; border-color: #555 !important; }
+  body.dark .compile-btn:hover { background: #333 !important; color: #fff !important; }
+  body.dark .print-btn { background: #1c1c1c !important; border: 2px solid #555 !important; color: #ccc !important; }
+  body.dark .generate-btn { background: #2a2a2a !important; color: #fff !important; border: 1px solid #444 !important; }
+  body.dark .generate-btn:hover { background: #333 !important; }
+  body.dark .add-btn { background: #1c1c1c !important; color: #ccc !important; border-color: #555 !important; }
+  body.dark .add-btn:hover { background: #2a2a2a !important; color: #fff !important; }
+  body.dark .toggle-history-btn { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.2) !important; color: #ccc !important; }
+  body.dark #calcBtn, body.dark #btnProducts_float, body.dark #btnHistory_float { background: #2a2a2a !important; color: #ccc !important; box-shadow: -3px 3px 16px rgba(0,0,0,0.5) !important; }
+  body.dark #mobileFloatToggle, body.dark .mobile-float-btn { background: #2a2a2a !important; color: #ccc !important; }
+  body.dark #scrollTopBtn { background: #2a2a2a !important; color: #ccc !important; }
+  /* Modals */
+  body.dark .compile-overlay, body.dark .picker-overlay { background: rgba(0,0,0,0.75); }
+  body.dark .compile-modal, body.dark .picker-modal { background: #1e1e1e; }
+  body.dark .compile-modal-header { background: #252525 !important; color: #fff !important; border-bottom: 1px solid #333; }
+  body.dark .compile-modal-header h3 { color: #fff !important; }
+  body.dark .compile-modal-body, body.dark .picker-body { background: #1e1e1e; color: #ccc; }
+  body.dark .compile-modal-footer { border-color: #2a2a2a; background: #1e1e1e; }
+  body.dark .compile-group-title { color: #ccc; border-color: #333; }
+  body.dark .compile-group-meta { color: #666; }
+  body.dark .compile-table td { color: #bbb; border-color: #2a2a2a; }
+  body.dark .compile-table th { background: #2a2a2a; color: #ccc; }
+  body.dark .modal-close-btn { background: #2a2a2a; color: #aaa; }
+  body.dark .modal-close-btn:hover { background: #333; color: #fff; }
+  body.dark .modal-send-btn { background: #3a3a3a !important; color: #fff !important; }
+  body.dark .modal-send-btn:hover { background: #444 !important; }
+  /* Sidebar */
+  body.dark .sidebar { background: #1c1c1c; box-shadow: -4px 0 30px rgba(0,0,0,0.6); }
+  body.dark .sidebar-header { background: #252525 !important; color: #fff !important; border-bottom: 1px solid #333; }
+  body.dark .sidebar-header .clear-btn { color: #888 !important; }
+  body.dark .sidebar-body { background: #1c1c1c; }
+  body.dark .sidebar-empty { color: #555; }
+  body.dark .history-group { border-color: #2a2a2a; }
+  body.dark .history-group-header { background: #242424; color: #ccc; }
+  body.dark .history-group-header:hover { background: #2e2e2e; }
+  body.dark .history-item { color: #888; border-color: #2a2a2a; }
+  body.dark .history-item:hover { background: #222; }
+  body.dark .prod-cat-title { color: #aaa; border-color: #2a2a2a; }
+  body.dark .prod-item { background: #242424; border-color: #333; color: #ccc; }
+  body.dark .prod-item:hover { background: #2e2e2e; }
+  body.dark .prod-del-btn { color: #888 !important; }
+  body.dark .prod-add-form { background: #1a1a1a; border-color: #2a2a2a; }
+  body.dark .prod-add-form input, body.dark .prod-add-form select { background: #2a2a2a; border-color: #3a3a3a; color: #ddd; }
+  body.dark .prod-add-btn { background: #2a2a2a !important; color: #ccc !important; }
+  body.dark #prodSearch { background: #2a2a2a; border-color: #3a3a3a; color: #ddd; }
+  body.dark #newProductName, body.dark #newProductCat { background: #2a2a2a !important; border-color: #3a3a3a !important; color: #ddd !important; }
+  /* Picker */
+  body.dark .picker-header { background: #252525 !important; color: #fff !important; }
+  body.dark .picker-search { background: #2a2a2a; color: #ddd; border: none; }
+  body.dark .picker-col-title { color: #aaa; border-color: #333; }
+  body.dark .picker-btn { background: #242424; border-color: #333; color: #ccc; }
+  body.dark .picker-btn:hover { background: #2e2e2e; border-color: #555; color: #fff; }
+  body.dark .picker-btn.selected { background: #3a3a3a; color: #fff; border-color: #555; }
+  body.dark .product-chip { background: #242424; border-color: #333; color: #ccc; }
+  body.dark .product-chip:hover { background: #3a3a3a; color: #fff; border-color: #555; }
+  /* Calculator */
+  body.dark #calcPanel { background: #1e1e1e !important; box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important; }
+  body.dark #calcDragHandle { background: #252525 !important; color: #fff !important; }
+  body.dark #calcDisplay { background: #2a2a2a !important; border-color: #3a3a3a !important; color: #fff !important; }
+  body.dark #calcPanel button { background: #2a2a2a !important; color: #ddd !important; border-color: #3a3a3a !important; }
+  body.dark #calcPanel button[onclick*="calcPress('/')"],
+  body.dark #calcPanel button[onclick*="calcPress('*')"],
+  body.dark #calcPanel button[onclick*="calcPress('-')"],
+  body.dark #calcPanel button[onclick*="calcPress('+')"] { background: #333 !important; color: #fff !important; border-color: #555 !important; }
+  body.dark #calcPanel button[onclick*="calcPress('=')"] { background: #444 !important; color: #fff !important; }
+  body.dark #calcPanel button[onclick*="calcPress('C')"] { background: #3a1a1a !important; color: #fca5a5 !important; }
+  /* Status selects */
+  body.dark .status-select.pending   { background: #2a2a2a; color: #ccc; border-color: #444; }
+  body.dark .status-select.returned  { background: #0a1e2e; color: #7dd3fc; border-color: #0369a1; }
+  body.dark .status-select.paid      { background: #0a1e10; color: #86efac; border-color: #166534; }
+  body.dark .status-select.cancelled { background: #1e0a0a; color: #fca5a5; border-color: #7f1d1d; }
+  body.dark td select { background: #2a2a2a; border-color: #3a3a3a; color: #ccc; }
+  /* Inline style overrides */
+  body.dark [style*="background:#fff"], body.dark [style*="background: #fff"],
+  body.dark [style*="background:white"], body.dark [style*="background: white"] { background: #1e1e1e !important; color: #ccc !important; }
+  body.dark [style*="background:#fffbeb"], body.dark [style*="background: #fffbeb"] { background: #242424 !important; color: #ccc !important; }
+  body.dark [style*="background:#fff8e1"], body.dark [style*="background: #fff8e1"] { background: #2a2a2a !important; color: #ccc !important; }
+  body.dark [style*="background:#fde68a"], body.dark [style*="background: #fde68a"] { background: #333 !important; color: #ccc !important; }
+  body.dark [style*="background:#fee2e2"], body.dark [style*="background: #fee2e2"] { background: #2e0a0a !important; color: #fca5a5 !important; }
+  body.dark [style*="background:#f0f0f0"], body.dark [style*="background: #f0f0f0"] { background: #2a2a2a !important; color: #aaa !important; }
+  body.dark [style*="color:#333"], body.dark [style*="color: #333"],
+  body.dark [style*="color:#555"], body.dark [style*="color: #555"],
+  body.dark [style*="color:#b45309"], body.dark [style*="color: #b45309"] { color: #ccc !important; }
+  body.dark [style*="color:#888"], body.dark [style*="color: #888"] { color: #777 !important; }
+  body.dark [style*="border-bottom:1px solid #f0f0f0"], body.dark [style*="border-bottom: 1px solid #f0f0f0"] { border-color: #2a2a2a !important; }
+  body.dark [style*="border:1.5px solid #fde68a"], body.dark [style*="border: 1.5px solid #fde68a"] { border-color: #3a3a3a !important; }
+  body.dark [style*="border:1px solid #fde68a"], body.dark [style*="border: 1px solid #fde68a"] { border-color: #3a3a3a !important; }
+  body.dark [style*="border:1.5px solid #e0e0e0"], body.dark [style*="border: 1.5px solid #e0e0e0"] { background: #2a2a2a !important; border-color: #3a3a3a !important; color: #ddd !important; }
+  body.dark #historyViewBody input, body.dark #historyViewBody select { background: #2a2a2a !important; border-color: #3a3a3a !important; color: #ddd !important; }
+  body.dark .batch-checkbox { accent-color: #888; }
+  /* Firebase / Toast / Footer / PIN */
+  body.dark #firebaseStatus.ok    { background: #0a1e10; color: #86efac; }
+  body.dark #firebaseStatus.error { background: #1e0a0a; color: #fca5a5; }
+  body.dark #toastContainer .toast { background: #2a2a2a; color: #fff; }
+  body.dark footer { color: rgba(255,255,255,0.25); }
+  body.dark .pin-overlay { background: #0f0f0f; }
+  body.dark .pin-box { background: #1e1e1e; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+  body.dark .pin-box h2 { color: #fff; }
+  body.dark .pin-box p { color: #888; }
+  body.dark .pin-dot { border-color: #444; background: #2a2a2a; }
+  body.dark .pin-dot.filled { background: #888; border-color: #888; }
+  body.dark .pin-key { background: #2a2a2a; color: #ddd; border-color: #3a3a3a; }
+  body.dark .pin-key:hover { background: #333; color: #fff; }
+  body.dark .sidebar-backdrop { background: rgba(0,0,0,0.6); }
 </style>
 </head>
 <body>
@@ -1186,6 +1352,7 @@
       <p id="dailyQuote" style="font-size:11px;opacity:0.75;margin-top:8px;font-style:italic;max-width:420px;line-height:1.5;"></p>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
+      <button id="darkModeBtn" class="toggle-history-btn" onclick="toggleDarkMode()" title="Toggle dark mode" style="font-size:16px;padding:8px 12px;">🌙</button>
       <button id="btnProducts" class="toggle-history-btn" onclick="toggleProductsSidebar()">🛒 Products</button>
       <button id="btnHistory" class="toggle-history-btn" onclick="toggleSidebar()">&#x1F4DA; Archived</button>
     </div>
@@ -1259,7 +1426,7 @@
 
   <div class="table-section">
     <div class="table-actions">
-      <div class="section-title" style="margin:0;padding:0;border:none;line-height:2;">STR Records <span id="pendingBadge" style="display:none;background:#fff8e1;color:#f59e0b;border:1.5px solid #fde68a;border-radius:20px;font-size:11px;font-weight:700;padding:2px 10px;margin-left:8px;vertical-align:middle;cursor:pointer;transition:all 0.2s;" onclick="togglePendingFilter()" title="Click to filter pending records"></span></div>
+      <div class="section-title" style="margin:0;padding:0;border:none;line-height:2;">STR Records <span id="pendingBadge" style="display:none;background:#fff8e1;color:#555;border-radius:20px;font-size:11px;font-weight:700;padding:2px 10px;margin-left:8px;vertical-align:middle;cursor:pointer;transition:all 0.2s;" onclick="togglePendingFilter()" title="Click to filter pending records"></span></div>
       <div style="margin-left:auto;display:flex;gap:10px;">
         <button class="send-history-btn" id="sendHistoryBtn" onclick="sendToHistory()">&#x1F4DA; Send to Archived</button>
       </div>
@@ -1288,8 +1455,8 @@
     <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
       <button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
       <div style="display:flex;gap:10px;">
-        <button class="compile-btn" style="background:#fff;color:#b45309;border:2px solid #b45309;" onclick="printSTRRecords()">🖨️ Print</button>
-        <button class="compile-btn" onclick="compileRecords()">📄 Compile</button>
+        <button class="compile-btn print-btn" onclick="printSTRRecords()">&#x1F5A8;&#xFE0F; Print</button>
+        <button class="compile-btn" onclick="compileRecords()">&#x1F4C4; Compile</button>
       </div>
     </div>
   </div>
@@ -1311,29 +1478,29 @@
 </div>
 
 <!-- CALCULATOR -->
-<div id="calcPanel" style="display:none;position:fixed;top:108px;right:56px;z-index:400;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);width:240px;overflow:hidden;">
-  <div style="background:linear-gradient(135deg,#b45309,#f59e0b);padding:12px 16px;color:white;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:grab;user-select:none;" id="calcDragHandle">
+<div id="calcPanel" style="display:none;position:fixed;top:108px;right:56px;z-index:400;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);width:240px;overflow:hidden;">
+  <div style="padding:12px 16px;color:white;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:grab;user-select:none;" id="calcDragHandle">
     &#x1F9EE; Calculator
     <button onclick="toggleCalc()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px;">&#x2715;</button>
   </div>
   <div style="padding:12px;">
-    <div id="calcDisplay" style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:20px;font-weight:700;color:#b45309;text-align:right;margin-bottom:10px;min-height:44px;word-break:break-all;">0</div>
+    <div id="calcDisplay" style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:20px;font-weight:700;color:#333;text-align:right;margin-bottom:10px;min-height:44px;word-break:break-all;">0</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
       <button onclick="calcPress('C')"    style="grid-column:span 2;padding:10px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">C</button>
-      <button onclick="calcPress('⌫')"   style="padding:10px;background:#fff8e1;color:#b45309;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">⌫</button>
-      <button onclick="calcPress('/')"    style="padding:10px;background:#fde68a;color:#b45309;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">÷</button>
+      <button onclick="calcPress('⌫')"   style="padding:10px;background:#fff8e1;color:#555;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">⌫</button>
+      <button onclick="calcPress('/')"    style="padding:10px;background:#fde68a;color:#555;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">÷</button>
       <button onclick="calcPress('7')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">7</button>
       <button onclick="calcPress('8')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">8</button>
       <button onclick="calcPress('9')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">9</button>
-      <button onclick="calcPress('*')"    style="padding:10px;background:#fde68a;color:#b45309;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">×</button>
+      <button onclick="calcPress('*')"    style="padding:10px;background:#fde68a;color:#555;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">×</button>
       <button onclick="calcPress('4')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">4</button>
       <button onclick="calcPress('5')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">5</button>
       <button onclick="calcPress('6')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">6</button>
-      <button onclick="calcPress('-')"    style="padding:10px;background:#fde68a;color:#b45309;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">−</button>
+      <button onclick="calcPress('-')"    style="padding:10px;background:#fde68a;color:#555;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">−</button>
       <button onclick="calcPress('1')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">1</button>
       <button onclick="calcPress('2')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">2</button>
       <button onclick="calcPress('3')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">3</button>
-      <button onclick="calcPress('+')"    style="padding:10px;background:#fde68a;color:#b45309;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">+</button>
+      <button onclick="calcPress('+')"    style="padding:10px;background:#fde68a;color:#555;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">+</button>
       <button onclick="calcPress('0')"    style="grid-column:span 2;padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">0</button>
       <button onclick="calcPress('.')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">.</button>
       <button onclick="calcPress('=')"    style="padding:10px;background:linear-gradient(135deg,#b45309,#f59e0b);color:white;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">=</button>
@@ -1421,10 +1588,10 @@
     <div class="compile-modal-body" id="historyViewBody"></div>
     <div class="compile-modal-footer">
       <button class="modal-close-btn" onclick="closeHistoryView()">Close</button>
-      <button class="modal-close-btn" id="renameBatchViewBtn" onclick="openRenameHistoryBatch()" style="background:#fff8e1;color:#b45309;border:1.5px solid #fde68a;">📝 Rename</button>
-      <button class="modal-close-btn" id="editBatchBtn" onclick="toggleEditBatch()" style="background:#fff8e1;color:#b45309;border:1.5px solid #fde68a;">✏️ Edit</button>
+      <button class="modal-close-btn" id="renameBatchViewBtn" onclick="openRenameHistoryBatch()" style="background:#f0f0f0;color:#555;border:1.5px solid #ccc;">📝 Rename</button>
+      <button class="modal-close-btn" id="editBatchBtn" onclick="toggleEditBatch()" style="background:#f0f0f0;color:#555;border:1.5px solid #ccc;">✏️ Edit</button>
       <button class="modal-send-btn" id="saveBatchBtn" onclick="saveBatchEdits()" style="display:none;">💾 Save</button>
-      <button class="modal-send-btn" style="background:#b45309;" onclick="printBatch()">🖨️ Print</button>
+      <button class="modal-send-btn" onclick="printBatch()">🖨️ Print</button>
     </div>
   </div>
 </div>
@@ -1457,17 +1624,17 @@
 <!-- PENDING WARNING MODAL -->
 <div class="compile-overlay" id="pendingWarningOverlay">
   <div class="compile-modal" style="max-width:420px;">
-    <div class="compile-modal-header" style="background:linear-gradient(135deg,#b45309,#f59e0b);text-align:center;">
+    <div class="compile-modal-header" style="text-align:center;">
       <h3 style="margin:0;font-size:18px;">⚠️ Pending Records</h3>
     </div>
     <div class="compile-modal-body" style="text-align:center;padding:32px 24px;">
       <p style="font-size:14px;color:#555;margin-bottom:8px;">You still have</p>
-      <p id="pendingWarningCount" style="font-size:32px;font-weight:700;color:#b45309;margin:0 0 16px 0;"></p>
+      <p id="pendingWarningCount" style="font-size:32px;font-weight:700;color:#333;margin:0 0 16px 0;"></p>
       <p style="font-size:13px;color:#888;margin:0;">pending record(s) that need status updates.</p>
     </div>
     <div class="compile-modal-footer" style="justify-content:center;gap:12px;">
       <button class="modal-close-btn" onclick="closePendingWarning()" style="background:#f0f0f0;color:#555;flex:1;">Cancel</button>
-      <button class="modal-send-btn" onclick="proceedWithCompile()" style="background:linear-gradient(135deg,#b45309,#f59e0b);flex:1;">Compile Anyway</button>
+      <button class="modal-send-btn" onclick="proceedWithCompile()" style="flex:1;">Compile Anyway</button>
     </div>
   </div>
 </div>
@@ -1475,7 +1642,7 @@
 <!-- RENAME BATCH MODAL -->
 <div class="compile-overlay" id="renameBatchOverlay">
   <div class="compile-modal" style="max-width:480px;">
-    <div class="compile-modal-header" style="background:linear-gradient(135deg,#b45309,#f59e0b);text-align:center;">
+    <div class="compile-modal-header" style="text-align:center;">
       <h3 style="margin:0;font-size:18px;">📝 Please give it a name</h3>
     </div>
     <div class="compile-modal-body" style="padding:28px 24px;">
@@ -1485,12 +1652,29 @@
       </div>
       <div style="margin-bottom:16px;">
         <label style="display:block;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">📅 Date</label>
-        <input type="date" id="renameBatchDatePicker" style="width:100%;padding:10px 14px;border:1.5px solid #fde68a;border-radius:8px;font-size:14px;box-sizing:border-box;background:#fff8e1;color:#b45309;">
+        <input type="date" id="renameBatchDatePicker" style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;box-sizing:border-box;">
       </div>
     </div>
     <div class="compile-modal-footer" style="justify-content:flex-end;gap:10px;">
       <button class="modal-close-btn" onclick="closeRenameBatch()" style="background:#f0f0f0;color:#555;">Cancel</button>
-      <button class="modal-send-btn" onclick="confirmRenameBatch()" style="background:linear-gradient(135deg,#b45309,#f59e0b);">Save & Send</button>
+      <button class="modal-send-btn" onclick="confirmRenameBatch()">Save &amp; Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE SELECTED BATCHES CONFIRM MODAL -->
+<div class="compile-overlay" id="deleteSelectedBatchesOverlay">
+  <div class="compile-modal" style="max-width:400px;">
+    <div class="compile-modal-header" style="text-align:center;justify-content:center;">
+      <h3 style="margin:0;font-size:18px;">&#x1F5D1;&#xFE0F; Delete Selected?</h3>
+    </div>
+    <div class="compile-modal-body" style="padding:24px;text-align:center;">
+      <p id="deleteSelectedBatchesMsg" style="font-size:14px;color:#555;line-height:1.6;"></p>
+      <p style="font-size:12px;color:#aaa;margin-top:8px;">This will also remove them from Firestore. This cannot be undone.</p>
+    </div>
+    <div class="compile-modal-footer" style="justify-content:center;gap:12px;">
+      <button class="modal-close-btn" onclick="document.getElementById('deleteSelectedBatchesOverlay').classList.remove('visible')" style="padding:10px 28px;font-size:14px;">Cancel</button>
+      <button class="modal-send-btn" onclick="confirmDeleteSelectedBatches()" style="background:linear-gradient(135deg,#dc2626,#ef4444);padding:10px 28px;font-size:14px;">Yes, Delete</button>
     </div>
   </div>
 </div>
@@ -1498,12 +1682,12 @@
 <!-- DELETE PRODUCT CONFIRM MODAL -->
 <div class="compile-overlay" id="deleteProductOverlay">
   <div class="compile-modal" style="max-width:400px;">
-    <div class="compile-modal-header" style="background:linear-gradient(135deg,#b45309,#f59e0b);text-align:center;justify-content:center;">
+    <div class="compile-modal-header" style="text-align:center;justify-content:center;">
       <h3 style="margin:0;font-size:18px;">&#x1F5D1;&#xFE0F; Remove Product?</h3>
     </div>
     <div class="compile-modal-body" style="padding:24px;text-align:center;">
       <p style="font-size:15px;color:#333;margin-bottom:6px;">Are you sure you want to remove</p>
-      <p id="deleteProductName" style="font-size:16px;font-weight:700;color:#b45309;margin-bottom:8px;"></p>
+      <p id="deleteProductName" style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;"></p>
       <p style="font-size:12px;color:#aaa;">This cannot be undone.</p>
     </div>
     <div class="compile-modal-footer" style="justify-content:center;gap:12px;">
@@ -1516,11 +1700,11 @@
 <!-- CLEAR HISTORY CONFIRM MODAL -->
 <div class="compile-overlay" id="clearHistoryOverlay">
   <div class="compile-modal" style="max-width:400px;">
-    <div class="compile-modal-header" style="background:linear-gradient(135deg,#b45309,#f59e0b);text-align:center;justify-content:center;">
+    <div class="compile-modal-header" style="text-align:center;justify-content:center;">
       <h3 style="margin:0;font-size:18px;">&#x1F5D1;&#xFE0F; Clear All Archived?</h3>
     </div>
     <div class="compile-modal-body" style="padding:24px;text-align:center;">
-      <p style="font-size:14px;color:#555;line-height:1.6;">This will permanently delete <strong style="color:#b45309;">all archived batches</strong> from both this device and Firestore.</p>
+      <p style="font-size:14px;color:#555;line-height:1.6;">This will permanently delete <strong>all archived batches</strong> from both this device and Firestore.</p>
       <p style="font-size:12px;color:#aaa;margin-top:8px;">This action cannot be undone.</p>
     </div>
     <div class="compile-modal-footer" style="justify-content:center;gap:12px;">
@@ -1533,7 +1717,7 @@
 <!-- RENAME HISTORY BATCH MODAL -->
 <div class="compile-overlay" id="renameHistoryBatchOverlay">
   <div class="compile-modal" style="max-width:480px;">
-    <div class="compile-modal-header" style="background:linear-gradient(135deg,#b45309,#f59e0b);text-align:center;">
+    <div class="compile-modal-header" style="text-align:center;">
       <h3 style="margin:0;font-size:18px;">📝 Rename Record</h3>
     </div>
     <div class="compile-modal-body" style="padding:28px 24px;">
@@ -1541,13 +1725,13 @@
         <label style="display:block;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">New Name</label>
         <input type="text" id="renameHistoryBatchInput" placeholder="e.g. Morning Transfer, Afternoon Restock" style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;box-sizing:border-box;" onkeydown="if(event.key==='Enter')confirmRenameHistoryBatch()">
       </div>
-      <div style="background:#fff8e1;border:1.5px solid #fde68a;border-radius:8px;padding:12px;font-size:12px;color:#666;">
-        <strong style="color:#b45309;">📅 Created:</strong> <span id="renameHistoryBatchDate"></span>
+      <div style="background:#f5f5f5;border:1.5px solid #e0e0e0;border-radius:8px;padding:12px;font-size:12px;color:#666;">
+        <strong style="color:#555;">📅 Created:</strong> <span id="renameHistoryBatchDate"></span>
       </div>
     </div>
     <div class="compile-modal-footer" style="justify-content:flex-end;gap:10px;">
       <button class="modal-close-btn" onclick="closeRenameHistoryBatch()" style="background:#f0f0f0;color:#555;">Cancel</button>
-      <button class="modal-send-btn" onclick="confirmRenameHistoryBatch()" style="background:linear-gradient(135deg,#b45309,#f59e0b);">Save Changes</button>
+      <button class="modal-send-btn" onclick="confirmRenameHistoryBatch()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -1660,6 +1844,13 @@
     else if (e.key === 'Escape') pinClear();
   });
 
+  function toggleDarkMode() {
+    const isDark = document.body.classList.toggle('dark');
+    document.getElementById('darkModeBtn').textContent = isDark ? '☀️' : '🌙';
+    localStorage.setItem('str_dark_mode', isDark ? '1' : '0');
+    updatePendingBadge();
+  }
+
   function todayLocal() {
     const d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -1669,6 +1860,13 @@
     const d = new Date();
     const local = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     document.getElementById("date").value = local;
+    // Restore dark mode preference
+    if (localStorage.getItem('str_dark_mode') === '1') {
+      document.body.classList.add('dark');
+      document.getElementById('darkModeBtn').textContent = '☀️';
+    }
+    // Clean up early dark class from <html>
+    document.documentElement.classList.remove('dark-early');
     restoreFormInputs();
     loadProductsFromFirestore();
     loadRecordsFromFirestore();
@@ -1678,6 +1876,7 @@
 
   // Start by loading PIN then showing lock screen
   if (sessionStorage.getItem('str_unlocked') === '1') {
+    document.documentElement.classList.remove('dark-early');
     initApp();
   } else {
     document.getElementById('pinOverlay').style.display = 'flex';
@@ -1927,7 +2126,7 @@
           <td>${qty}</td>
           <td>${unit}</td>
           <td>
-            <select class="status-select" style="background:#fff8e1;color:#b45309;border:1px solid #fde68a;">
+            <select class="status-select" style="background:#fff8e1;color:#555;border:1px solid #fde68a;">
               <option value="">— Select —</option>
               <option value="ROBI" ${remarks==='ROBI'?'selected':''}>ROBI</option>
               <option value="TBR" ${remarks==='TBR'?'selected':''}>TBR</option>
@@ -2002,11 +2201,17 @@
   function updatePendingBadge() {
     const pending = document.querySelectorAll('#strTable tbody .status-select.pending').length;
     const badge = document.getElementById('pendingBadge');
+    const isDark = document.body.classList.contains('dark');
     if (pending > 0) {
       badge.textContent = '🟡 ' + pending + ' Pending';
       badge.style.display = 'inline';
-      badge.style.background = pendingFilterActive ? '#f59e0b' : '#fff8e1';
-      badge.style.color = pendingFilterActive ? '#fff' : '#f59e0b';
+      if (pendingFilterActive) {
+        badge.style.background = isDark ? '#444' : '#f59e0b';
+        badge.style.color = '#fff';
+      } else {
+        badge.style.background = isDark ? '#2a2a2a' : '#fff8e1';
+        badge.style.color = isDark ? '#ccc' : '#f59e0b';
+      }
     } else {
       badge.style.display = 'none';
     }
@@ -2016,19 +2221,17 @@
     pendingFilterActive = !pendingFilterActive;
     const tbody = document.querySelector("#strTable tbody");
     const rows = tbody.querySelectorAll("tr:not(.empty-row)");
-    
+
     if (pendingFilterActive) {
-      // Show only pending rows
       rows.forEach(row => {
-        const statusSelect = row.querySelector(".status-select.pending");
-        row.style.display = statusSelect ? '' : 'none';
+        const isPending = row.querySelector(".status-select.pending");
+        row.style.display = isPending ? '' : 'none';
       });
-      updatePendingBadge();
     } else {
-      // Show all rows
+      // Always show ALL rows when filter is off
       rows.forEach(row => row.style.display = '');
-      updatePendingBadge();
     }
+    updatePendingBadge();
   }
 
   function updateStatus(sel) {
@@ -2041,9 +2244,17 @@
         .catch(err => console.error("Status update failed:", err));
     }
     updatePendingBadge();
-    // Reapply filter if active
     if (pendingFilterActive) {
-      tr.style.display = sel.value === 'pending' ? '' : 'none';
+      // Hide this row if it's no longer pending
+      if (sel.value !== 'pending') tr.style.display = 'none';
+      // Check if any pending rows remain
+      const pendingLeft = document.querySelectorAll('#strTable tbody .status-select.pending').length;
+      if (pendingLeft === 0) {
+        // No more pending — turn off filter and show everything
+        pendingFilterActive = false;
+        document.querySelectorAll('#strTable tbody tr:not(.empty-row)').forEach(r => r.style.display = '');
+        updatePendingBadge();
+      }
     }
   }
 
@@ -2146,11 +2357,17 @@
     const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
     if (rows.length === 0) { showToast("No records to compile.", true); return; }
 
+    const isDark = document.body.classList.contains('dark');
+    const borderColor = isDark ? '#2a2a2a' : '#f0f0f0';
+    const tdColor = isDark ? '#bbb' : '#444';
+    const theadBg = isDark ? '#2a2a2a' : '#b45309';
+    const theadColor = isDark ? '#ccc' : 'white';
+
     const body = document.getElementById("compileBody");
     body.innerHTML = `
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead>
-          <tr style="background:#b45309;color:white;">
+          <tr style="background:${theadBg};color:${theadColor};">
             <th style="padding:10px 12px;text-align:left;">STR #</th>
             <th style="padding:10px 12px;text-align:left;">Date</th>
             <th style="padding:10px 12px;text-align:left;">Store</th>
@@ -2173,17 +2390,17 @@
       const status  = cells[8].querySelector("select")?.value || 'pending';
       const statusLabels = { pending:'🟡 Pending', returned:'🔵 Returned', paid:'🟢 Paid', cancelled:'🔴 Cancelled' };
       const row = document.createElement("tr");
-      row.style.borderBottom = "1px solid #f0f0f0";
+      row.style.borderBottom = `1px solid ${borderColor}`;
       row.innerHTML = `
-        <td style="padding:10px 12px;">${cells[0].textContent}</td>
-        <td style="padding:10px 12px;">${cells[1].textContent}</td>
-        <td style="padding:10px 12px;">${cells[2].textContent}</td>
-        <td style="padding:10px 12px;">${cells[3].textContent}</td>
-        <td style="padding:10px 12px;">${cells[4].textContent}</td>
-        <td style="padding:10px 12px;">${cells[5].textContent}</td>
-        <td style="padding:10px 12px;">${remarks}</td>
-        <td style="padding:10px 12px;">${cells[7].textContent}</td>
-        <td style="padding:10px 12px;">${statusLabels[status] || status}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${cells[0].textContent}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${cells[1].textContent}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${cells[2].textContent}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${cells[3].textContent}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${cells[4].textContent}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${cells[5].textContent}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${remarks}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${cells[7].textContent}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${statusLabels[status] || status}</td>
       `;
       tbody.appendChild(row);
     });
@@ -2299,7 +2516,7 @@
       div.innerHTML = `
         <div class="history-group-header" style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" class="batch-checkbox" data-index="${batchIndex}"
-            style="width:15px;height:15px;accent-color:#b45309;flex-shrink:0;cursor:pointer;"
+            style="width:15px;height:15px;flex-shrink:0;cursor:pointer;"
             onclick="event.stopPropagation();updateDeleteSelectedBtn()">
           <span style="flex:1;cursor:pointer;" onclick="viewBatch(${batchIndex})">${batch.sentAt}</span>
           <span style="cursor:pointer;" onclick="viewBatch(${batchIndex})">${batch.rows.length} item(s)</span>
@@ -2317,16 +2534,22 @@
   function deleteSelectedBatches() {
     const checked = [...document.querySelectorAll('.batch-checkbox:checked')];
     if (checked.length === 0) return;
+    const msg = `You are about to delete <strong>${checked.length} batch${checked.length > 1 ? 'es' : ''}</strong>. Are you sure?`;
+    document.getElementById('deleteSelectedBatchesMsg').innerHTML = msg;
+    document.getElementById('deleteSelectedBatchesOverlay').classList.add('visible');
+  }
+
+  function confirmDeleteSelectedBatches() {
+    document.getElementById('deleteSelectedBatchesOverlay').classList.remove('visible');
+    const checked = [...document.querySelectorAll('.batch-checkbox:checked')];
     const indices = checked.map(cb => parseInt(cb.dataset.index)).sort((a,b) => b - a);
     indices.forEach(idx => {
       const batch = historyBatches[idx];
       if (!batch) return;
       batch.rows.forEach(r => {
         if (r.docId) {
-          // Fast path — we have the docId
           db.collection("str_records").doc(r.docId).delete().catch(e => console.error(e));
         } else {
-          // Fallback — query by strNumber + date + product
           db.collection("str_records")
             .where("strNumber", "==", r.strNumber)
             .where("date", "==", r.date)
@@ -2341,7 +2564,7 @@
     localStorage.setItem('str_history', JSON.stringify(historyBatches));
     document.getElementById('deleteSelectedBatchesBtn').style.display = 'none';
     renderHistory();
-    showToast(`\uD83D\uDDD1\uFE0F ${indices.length} batch(es) deleted.`);
+    showToast(`\uD83D\uDDD1\uFE0F ${indices.length} batch${indices.length > 1 ? 'es' : ''} deleted.`);
   }
 
   let currentViewBatchIndex = null;
@@ -2362,19 +2585,29 @@
     const body = document.getElementById("historyViewBody");
     const remarkOpts = ['','ROBI','TBR','PT','SAFE KEEP'];
     const statusOpts = ['pending','returned','paid','cancelled'];
+    const isDark = document.body.classList.contains('dark');
+    const borderColor = isDark ? '#2a2a2a' : '#f0f0f0';
+    const tdColor = isDark ? '#bbb' : '#444';
+    const rowBg = isDark ? '#242424' : '#fffbeb';
+    const inputStyle = isDark
+      ? 'width:100%;padding:4px 6px;border:1.5px solid #3a3a3a;border-radius:6px;font-size:12px;background:#2a2a2a;color:#ddd;'
+      : 'width:100%;padding:4px 6px;border:1.5px solid #fde68a;border-radius:6px;font-size:12px;';
+    const selStyle = isDark
+      ? 'padding:4px 6px;border:1.5px solid #3a3a3a;border-radius:6px;font-size:12px;background:#2a2a2a;color:#ddd;'
+      : 'padding:4px 6px;border:1.5px solid #fde68a;border-radius:6px;font-size:12px;';
 
     const rows = batch.rows.map((r, i) => {
       if (!editable) return `
-        <tr style="border-bottom:1px solid #f0f0f0;">
-          <td style="padding:9px 12px;">${r.strNumber}</td>
-          <td style="padding:9px 12px;">${r.date}</td>
-          <td style="padding:9px 12px;">${r.store}</td>
-          <td style="padding:9px 12px;">${r.product}</td>
-          <td style="padding:9px 12px;">${r.qty}</td>
-          <td style="padding:9px 12px;">${r.unit}</td>
-          <td style="padding:9px 12px;">${r.remarks}</td>
-          <td style="padding:9px 12px;">${r.refNumber}</td>
-          <td style="padding:9px 12px;">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</td>
+        <tr style="border-bottom:1px solid ${borderColor};">
+          <td style="padding:9px 12px;color:${tdColor};">${r.strNumber}</td>
+          <td style="padding:9px 12px;color:${tdColor};">${r.date}</td>
+          <td style="padding:9px 12px;color:${tdColor};">${r.store}</td>
+          <td style="padding:9px 12px;color:${tdColor};">${r.product}</td>
+          <td style="padding:9px 12px;color:${tdColor};">${r.qty}</td>
+          <td style="padding:9px 12px;color:${tdColor};">${r.unit}</td>
+          <td style="padding:9px 12px;color:${tdColor};">${r.remarks}</td>
+          <td style="padding:9px 12px;color:${tdColor};">${r.refNumber}</td>
+          <td style="padding:9px 12px;color:${tdColor};">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</td>
           <td style="padding:9px 12px;text-align:center;">
             <button onclick="deleteBatchRow(${i})" style="background:none;border:none;cursor:pointer;font-size:16px;line-height:1;" title="Delete row">&#x1F5D1;&#xFE0F;</button>
           </td>
@@ -2382,11 +2615,11 @@
 
       const remSel = remarkOpts.map(o => `<option value="${o}" ${r.remarks===o?'selected':''}>${o||'—'}</option>`).join('');
       const staSel = statusOpts.map(o => `<option value="${o}" ${r.status===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('');
-      const inp = (val, cls) => `<input data-i="${i}" data-f="${cls}" value="${val}" style="width:100%;padding:4px 6px;border:1.5px solid #fde68a;border-radius:6px;font-size:12px;">`;
-      const sel = (opts, cls) => `<select data-i="${i}" data-f="${cls}" style="padding:4px 6px;border:1.5px solid #fde68a;border-radius:6px;font-size:12px;">${opts}</select>`;
+      const inp = (val, cls) => `<input data-i="${i}" data-f="${cls}" value="${val}" style="${inputStyle}">`;
+      const sel = (opts, cls) => `<select data-i="${i}" data-f="${cls}" style="${selStyle}">${opts}</select>`;
 
       return `
-        <tr style="border-bottom:1px solid #f0f0f0;background:#fffbeb;">
+        <tr style="border-bottom:1px solid ${borderColor};background:${rowBg};">
           <td style="padding:6px 8px;">${inp(r.strNumber,'strNumber')}</td>
           <td style="padding:6px 8px;">${inp(r.date,'date')}</td>
           <td style="padding:6px 8px;">${inp(r.store,'store')}</td>
@@ -2399,11 +2632,13 @@
         </tr>`;
     }).join('');
 
+    const theadBg = isDark ? '#2a2a2a' : '#b45309';
+    const theadColor = isDark ? '#ccc' : 'white';
     body.innerHTML = `
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px;">
           <thead>
-            <tr style="background:#b45309;color:white;">
+            <tr style="background:${theadBg};color:${theadColor};">
               <th style="padding:10px 12px;text-align:left;">STR #</th>
               <th style="padding:10px 12px;text-align:left;">Date</th>
               <th style="padding:10px 12px;text-align:left;">Store</th>
@@ -2752,7 +2987,7 @@
           <td>${d.qty || ''}</td>
           <td>${d.unit || ''}</td>
           <td>
-            <select class="status-select" style="background:#fff8e1;color:#b45309;border:1px solid #fde68a;">
+            <select class="status-select" style="background:#fff8e1;color:#555;border:1px solid #fde68a;">
               <option value="">— Select —</option>
               <option value="ROBI" ${d.remarks==='ROBI'?'selected':''}>ROBI</option>
               <option value="TBR" ${d.remarks==='TBR'?'selected':''}>TBR</option>
