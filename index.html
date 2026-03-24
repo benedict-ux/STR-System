@@ -102,7 +102,7 @@
     font-family: 'Segoe UI', Arial, sans-serif;
     background: linear-gradient(135deg, #1a1200 0%, #2d1f00 50%, #7a4f00 100%);
     min-height: 100vh;
-    padding: 30px 20px 30px;
+    padding: 30px 20px 4px;
     overflow-x: hidden;
   }
 
@@ -184,9 +184,9 @@
     #calcBtn { display: flex !important; }
     #btnProducts_float.scroll-show,
     #btnHistory_float.scroll-show { display: flex !important; }
-    #calcBtn           { top: 12px; }
-    #btnProducts_float { top: 60px; }
-    #btnHistory_float  { top: 108px; }
+    #calcBtn           { top: 108px; }
+    #btnProducts_float { top: 12px; }
+    #btnHistory_float  { top: 60px; }
   }
 
   /* When sidebar open — desktop only */
@@ -1104,6 +1104,43 @@
     z-index: 299;
   }
   .sidebar-backdrop.visible { display: block; }
+
+  /* ── TOAST NOTIFICATION ── */
+  #toastContainer {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+  }
+  .toast {
+    background: linear-gradient(135deg, #b45309, #f59e0b);
+    color: white;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+    max-width: 90vw;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .toast.error {
+    background: linear-gradient(135deg, #dc2626, #f87171);
+  }
 </style>
 </head>
 <body>
@@ -1150,7 +1187,7 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <button id="btnProducts" class="toggle-history-btn" onclick="toggleProductsSidebar()">🛒 Products</button>
-      <button id="btnHistory" class="toggle-history-btn" onclick="toggleSidebar()">📋 History</button>
+      <button id="btnHistory" class="toggle-history-btn" onclick="toggleSidebar()">&#x1F4DA; Archived</button>
     </div>
   </div>
   </div>
@@ -1224,7 +1261,7 @@
     <div class="table-actions">
       <div class="section-title" style="margin:0;padding:0;border:none;line-height:2;">STR Records <span id="pendingBadge" style="display:none;background:#fff8e1;color:#f59e0b;border:1.5px solid #fde68a;border-radius:20px;font-size:11px;font-weight:700;padding:2px 10px;margin-left:8px;vertical-align:middle;cursor:pointer;transition:all 0.2s;" onclick="togglePendingFilter()" title="Click to filter pending records"></span></div>
       <div style="margin-left:auto;display:flex;gap:10px;">
-        <button class="send-history-btn" id="sendHistoryBtn" onclick="sendToHistory()">📋 Send to History</button>
+        <button class="send-history-btn" id="sendHistoryBtn" onclick="sendToHistory()">&#x1F4DA; Send to Archived</button>
       </div>
     </div>
     <div id="strPrintArea" style="overflow-x:auto; border-radius:10px; border:1px solid #fde68a;">
@@ -1261,23 +1298,23 @@
 
 <button id="calcBtn" onclick="toggleCalc()" title="Calculator">🧮</button>
 <button id="btnProducts_float" onclick="toggleProductsSidebar()" title="Products">&#x1F6D2;</button>
-<button id="btnHistory_float" onclick="toggleSidebar()" title="History">📋</button>
+<button id="btnHistory_float" onclick="toggleSidebar()" title="Archived">&#x1F4DA;</button>
 
 <!-- MOBILE FLOATING MENU -->
 <div id="mobileFloatMenu" class="snapped-right">
   <button id="mobileFloatToggle" onclick="toggleMobileMenu()" title="Menu">☰</button>
   <div id="mobileFloatItems">
-    <button class="mobile-float-btn" onclick="toggleCalc()" title="Calculator">🧮</button>
     <button class="mobile-float-btn" id="mobileBtnProducts" onclick="toggleProductsSidebar()" title="Products">🛒</button>
-    <button class="mobile-float-btn" id="mobileBtnHistory" onclick="toggleSidebar()" title="History">&#x1F4CB;</button>
+    <button class="mobile-float-btn" id="mobileBtnHistory" onclick="toggleSidebar()" title="Archived">&#x1F4DA;</button>
+    <button class="mobile-float-btn" onclick="toggleCalc()" title="Calculator">🧮</button>
   </div>
 </div>
 
 <!-- CALCULATOR -->
-<div id="calcPanel" style="display:none;position:fixed;top:90px;right:0;z-index:400;background:#fff;border-radius:16px 0 0 16px;box-shadow:-4px 4px 24px rgba(0,0,0,0.3);width:240px;overflow:hidden;">
-  <div style="background:linear-gradient(135deg,#b45309,#f59e0b);padding:12px 16px;color:white;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
-    🧮 Calculator
-    <button onclick="toggleCalc()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px;">✕</button>
+<div id="calcPanel" style="display:none;position:fixed;top:108px;right:56px;z-index:400;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);width:240px;overflow:hidden;">
+  <div style="background:linear-gradient(135deg,#b45309,#f59e0b);padding:12px 16px;color:white;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:grab;user-select:none;" id="calcDragHandle">
+    &#x1F9EE; Calculator
+    <button onclick="toggleCalc()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px;">&#x2715;</button>
   </div>
   <div style="padding:12px;">
     <div id="calcDisplay" style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:20px;font-weight:700;color:#b45309;text-align:right;margin-bottom:10px;min-height:44px;word-break:break-all;">0</div>
@@ -1314,6 +1351,10 @@
     </div>
   </div>
   <div class="sidebar-body" id="productsBody" style="padding:12px 12px 0;">
+    <div style="padding:0 0 10px;">
+      <input type="text" id="prodSearch" placeholder="&#x1F50D; Search product..." oninput="renderProducts()"
+        style="width:100%;padding:8px 12px;border:1.5px solid #fde68a;border-radius:8px;font-size:13px;background:#fffbeb;color:#333;outline:none;box-sizing:border-box;">
+    </div>
     <div class="sidebar-empty" id="productsEmpty">No products yet. Add some below.</div>
   </div>
   <div class="prod-add-form">
@@ -1330,22 +1371,30 @@
 <!-- HISTORY SIDEBAR -->
 <div class="sidebar" id="historySidebar">
   <div class="sidebar-header">
-    📋 STR History
+    &#x1F4DA; STR Archived
     <div style="display:flex;gap:6px;align-items:center;">
+      <button class="clear-btn" id="deleteSelectedBatchesBtn" onclick="deleteSelectedBatches()" style="display:none;background:rgba(220,38,38,0.25);color:#fca5a5;">🗑️ Delete</button>
       <button class="clear-btn" onclick="exportAllToExcel()">📊 Excel</button>
       <button class="clear-btn" onclick="clearHistory()">Clear</button>
       <button class="clear-btn" onclick="toggleSidebar()" title="Close">✕</button>
     </div>
   </div>
   <div class="sidebar-body" id="historyBody">
-    <div class="sidebar-empty" id="historyEmpty">No STRs generated yet.</div>
+    <div class="sidebar-empty" id="historyEmpty">No archived records yet.</div>
   </div>
 </div>
 
 </div> <!-- /.app-wrapper -->
 
+<footer style="text-align:center;padding:8px;color:rgba(255,255,255,0.5);font-size:13px;letter-spacing:0.5px;">
+  JB EDSA KAMIAS
+</footer>
+
 <!-- Sidebar backdrop (fixed) -->
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeAllSidebars()"></div>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
 
 <!-- COMPILE MODAL -->
 <div class="compile-overlay" id="compileOverlay">
@@ -1357,7 +1406,7 @@
     <div class="compile-modal-body" id="compileBody"></div>
     <div class="compile-modal-footer">
       <button class="modal-close-btn" onclick="closeCompile()">Close</button>
-      <button class="modal-send-btn" onclick="sendToHistory()">📋 Send to History</button>
+      <button class="modal-send-btn" onclick="sendToHistory()">&#x1F4DA; Send to Archived</button>
     </div>
   </div>
 </div>
@@ -1366,7 +1415,7 @@
 <div class="compile-overlay" id="historyViewOverlay">
   <div class="compile-modal">
     <div class="compile-modal-header">
-      <h3 id="historyViewTitle">📋 Batch History</h3>
+      <h3 id="historyViewTitle">&#x1F4DA; Batch Archived</h3>
       <button class="modal-close-btn" style="background:rgba(255,255,255,0.2);color:white;" onclick="closeHistoryView()">✕</button>
     </div>
     <div class="compile-modal-body" id="historyViewBody"></div>
@@ -1434,13 +1483,49 @@
         <label style="display:block;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Record Name</label>
         <input type="text" id="renameBatchInput" placeholder="e.g. Morning Transfer, Afternoon Restock" style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;box-sizing:border-box;" onkeydown="if(event.key==='Enter')confirmRenameBatch()">
       </div>
-      <div style="background:#fff8e1;border:1.5px solid #fde68a;border-radius:8px;padding:12px;font-size:12px;color:#666;">
-        <strong style="color:#b45309;">📅 Created:</strong> <span id="renameBatchDate"></span>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">📅 Date</label>
+        <input type="date" id="renameBatchDatePicker" style="width:100%;padding:10px 14px;border:1.5px solid #fde68a;border-radius:8px;font-size:14px;box-sizing:border-box;background:#fff8e1;color:#b45309;">
       </div>
     </div>
     <div class="compile-modal-footer" style="justify-content:flex-end;gap:10px;">
       <button class="modal-close-btn" onclick="closeRenameBatch()" style="background:#f0f0f0;color:#555;">Cancel</button>
       <button class="modal-send-btn" onclick="confirmRenameBatch()" style="background:linear-gradient(135deg,#b45309,#f59e0b);">Save & Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE PRODUCT CONFIRM MODAL -->
+<div class="compile-overlay" id="deleteProductOverlay">
+  <div class="compile-modal" style="max-width:400px;">
+    <div class="compile-modal-header" style="background:linear-gradient(135deg,#b45309,#f59e0b);text-align:center;justify-content:center;">
+      <h3 style="margin:0;font-size:18px;">&#x1F5D1;&#xFE0F; Remove Product?</h3>
+    </div>
+    <div class="compile-modal-body" style="padding:24px;text-align:center;">
+      <p style="font-size:15px;color:#333;margin-bottom:6px;">Are you sure you want to remove</p>
+      <p id="deleteProductName" style="font-size:16px;font-weight:700;color:#b45309;margin-bottom:8px;"></p>
+      <p style="font-size:12px;color:#aaa;">This cannot be undone.</p>
+    </div>
+    <div class="compile-modal-footer" style="justify-content:center;gap:12px;">
+      <button class="modal-close-btn" onclick="document.getElementById('deleteProductOverlay').classList.remove('visible')" style="padding:10px 28px;font-size:14px;">Cancel</button>
+      <button class="modal-send-btn" id="deleteProductConfirmBtn" onclick="confirmDeleteProduct()" style="background:linear-gradient(135deg,#dc2626,#ef4444);padding:10px 28px;font-size:14px;">Yes, Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLEAR HISTORY CONFIRM MODAL -->
+<div class="compile-overlay" id="clearHistoryOverlay">
+  <div class="compile-modal" style="max-width:400px;">
+    <div class="compile-modal-header" style="background:linear-gradient(135deg,#b45309,#f59e0b);text-align:center;justify-content:center;">
+      <h3 style="margin:0;font-size:18px;">&#x1F5D1;&#xFE0F; Clear All Archived?</h3>
+    </div>
+    <div class="compile-modal-body" style="padding:24px;text-align:center;">
+      <p style="font-size:14px;color:#555;line-height:1.6;">This will permanently delete <strong style="color:#b45309;">all archived batches</strong> from both this device and Firestore.</p>
+      <p style="font-size:12px;color:#aaa;margin-top:8px;">This action cannot be undone.</p>
+    </div>
+    <div class="compile-modal-footer" style="justify-content:center;gap:12px;">
+      <button class="modal-close-btn" onclick="document.getElementById('clearHistoryOverlay').classList.remove('visible')" style="padding:10px 28px;font-size:14px;">Cancel</button>
+      <button class="modal-send-btn" onclick="confirmClearHistory()" style="background:linear-gradient(135deg,#dc2626,#ef4444);padding:10px 28px;font-size:14px;">Yes, Clear All</button>
     </div>
   </div>
 </div>
@@ -1496,6 +1581,22 @@
   const historyBatches = JSON.parse(localStorage.getItem('str_history') || '[]');
   let pendingFilterActive = false;
   let pendingRenameBatch = null;
+
+  // ─── TOAST ─────────────────────────────────────────────────────────
+  function showToast(msg, isError = false) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast' + (isError ? ' error' : '');
+    toast.textContent = msg;
+    container.appendChild(toast);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => toast.classList.add('show'));
+    });
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 2800);
+  }
 
   // ─── PIN LOCK ───────────────────────────────────────────────────────
   let pinInput = '';
@@ -1604,7 +1705,7 @@
     const name   = nameEl.value.trim();
     if (!name) { nameEl.focus(); return; }
     if (productItems.find(p => p.name.toLowerCase() === name.toLowerCase())) {
-      alert("Product already exists."); return;
+      showToast("Product already exists."); return;
     }
     try {
       const docRef = await db.collection("str_items").add({ name, category: catEl.value });
@@ -1614,32 +1715,44 @@
       renderProducts();
       buildPickerChips();
     } catch(err) {
-      alert("Failed to save product: " + err.message);
+      showToast("Failed to save product: " + err.message, true);
     }
   }
 
-  async function deleteProduct(id, name) {
-    if (!confirm(`Remove "${name}"?`)) return;
+  let _pendingDeleteProductId = null;
+
+  function deleteProduct(id, name) {
+    _pendingDeleteProductId = id;
+    document.getElementById('deleteProductName').textContent = '"' + name + '"';
+    document.getElementById('deleteProductOverlay').classList.add('visible');
+  }
+
+  async function confirmDeleteProduct() {
+    document.getElementById('deleteProductOverlay').classList.remove('visible');
+    const id = _pendingDeleteProductId;
+    if (!id) return;
     try {
       await db.collection("str_items").doc(id).delete();
       productItems = productItems.filter(p => p.id !== id);
       renderProducts();
       buildPickerChips();
+      showToast("Product removed.");
     } catch(err) {
-      alert("Failed to delete product: " + err.message);
+      showToast("Failed to delete product: " + err.message, true);
     }
+    _pendingDeleteProductId = null;
   }
 
   function renderProducts() {
     const body  = document.getElementById("productsBody");
     const empty = document.getElementById("productsEmpty");
     const count = document.getElementById("prodCount");
+    const query = (document.getElementById("prodSearch")?.value || '').toLowerCase().trim();
 
     body.querySelectorAll(".prod-cat-title, .prod-item").forEach(el => el.remove());
     count.textContent = `${productItems.length} item${productItems.length !== 1 ? 's' : ''}`;
 
     if (productItems.length === 0) { empty.style.display = "block"; return; }
-    empty.style.display = "none";
 
     const cats = [
       { key: 'food',                label: '🍔 Food' },
@@ -1647,9 +1760,11 @@
       { key: 'janitorial_cleaning', label: '🧹 Janitorial & Cleaning' }
     ];
 
+    let anyVisible = false;
     cats.forEach(cat => {
-      const items = productItems.filter(p => p.category === cat.key);
+      const items = productItems.filter(p => p.category === cat.key && (!query || p.name.toLowerCase().includes(query)));
       if (items.length === 0) return;
+      anyVisible = true;
       const title = document.createElement("div");
       title.className = "prod-cat-title";
       title.textContent = cat.label;
@@ -1661,6 +1776,9 @@
         body.appendChild(div);
       });
     });
+
+    empty.style.display = anyVisible ? "none" : "block";
+    empty.textContent = query ? `No products matching "${query}".` : "No products yet. Add some below.";
   }
 
   function updateSidebarSide() {
@@ -1670,19 +1788,6 @@
     document.body.classList.toggle("sidebar-open", anyOpen);
     document.body.classList.toggle("products-open", pOpen);
     document.body.classList.toggle("history-open", hOpen);
-
-    const panel = document.getElementById("calcPanel");
-    if (panel) {
-      if (anyOpen) {
-        panel.style.right = 'auto'; panel.style.left = '0';
-        panel.style.borderRadius = '0 16px 16px 0';
-        panel.style.boxShadow = '4px 4px 24px rgba(0,0,0,0.3)';
-      } else {
-        panel.style.left = 'auto'; panel.style.right = '0';
-        panel.style.borderRadius = '16px 0 0 16px';
-        panel.style.boxShadow = '-4px 4px 24px rgba(0,0,0,0.3)';
-      }
-    }
   }
 
   function toggleProductsSidebar() {
@@ -1786,7 +1891,7 @@
     const store     = document.getElementById("store").value;
 
     if (!strNumber || !date || !store) {
-      alert("Please fill in STR Number, Date, and Store.");
+      showToast("Please fill in STR Number, Date, and Store.", true);
       return;
     }
 
@@ -1801,6 +1906,15 @@
       const remarks = row.querySelector(".remarks").value;
 
       if (product && qty) {
+        // Validate unit and remarks
+        if (!unit) {
+          showToast("Please select a Unit for all items.", true);
+          added = -999; return;
+        }
+        if (!remarks) {
+          showToast("Please select Remarks for all items.", true);
+          added = -999; return;
+        }
         const emptyRow = tbody.querySelector(".empty-row");
         if (emptyRow) emptyRow.remove();
 
@@ -1851,12 +1965,14 @@
       }
     });
 
+    if (added === -999) return;
     if (added === 0) {
-      alert("Please add at least one item with a product and quantity.");
+      showToast("Please add at least one item with a product and quantity.", true);
       return;
     }
 
-    alert(`✅ STR ${strNumber} added with ${added} item(s).`);
+    sortTableByDate();
+    showToast(`✅ STR ${strNumber} added with ${added} item(s).`);
 
     // Clear item rows and reset form
     document.getElementById("itemsContainer").innerHTML = "";
@@ -1870,6 +1986,19 @@
   }
 
   // ─── HELPERS ───────────────────────────────────────────────────────
+  function sortTableByDate() {
+    const tbody = document.querySelector('#strTable tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr:not(.empty-row)'));
+    if (rows.length < 2) return;
+    // Sort newest date first; same date keeps insertion order (stable)
+    rows.sort((a, b) => {
+      const da = a.querySelectorAll('td')[1]?.textContent || '';
+      const db = b.querySelectorAll('td')[1]?.textContent || '';
+      return da.localeCompare(db);
+    });
+    rows.forEach(r => tbody.appendChild(r));
+  }
+
   function updatePendingBadge() {
     const pending = document.querySelectorAll('#strTable tbody .status-select.pending').length;
     const badge = document.getElementById('pendingBadge');
@@ -1936,7 +2065,7 @@
   // ─── COMPILE & SEND TO HISTORY ────────────────────────────────────
   function printSTRRecords() {
     const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
-    if (rows.length === 0) { alert("No records to print."); return; }
+    if (rows.length === 0) { showToast("No records to print.", true); return; }
 
     let rowsHtml = '';
     rows.forEach(function(tr) {
@@ -1974,18 +2103,25 @@
       + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>'
       + '<\/body><\/html>';
 
-    const win = window.open('', '_blank', 'width=900,height=600');
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    win.print();
-    win.close();
+    let iframe = document.getElementById('_printFrame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = '_printFrame';
+      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:none;';
+      document.body.appendChild(iframe);
+    }
+    iframe.srcdoc = html;
+    iframe.onload = function() {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    };
   }
 
   function compileRecords() {
     const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
-    if (rows.length === 0) { alert("No records to compile."); return; }
-    
+    if (rows.length === 0) { showToast("No records to compile.", true); return; }
+
+  
     const pendingCount = document.querySelectorAll("#strTable tbody .status-select.pending").length;
     if (pendingCount > 0) {
       document.getElementById('pendingWarningCount').textContent = pendingCount + ' pending';
@@ -2008,7 +2144,7 @@
 
   function showCompileModal() {
     const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
-    if (rows.length === 0) { alert("No records to compile."); return; }
+    if (rows.length === 0) { showToast("No records to compile.", true); return; }
 
     const body = document.getElementById("compileBody");
     body.innerHTML = `
@@ -2073,6 +2209,7 @@
     rows.forEach(tr => {
       const cells = tr.querySelectorAll("td");
       batchRows.push({
+        docId:     tr.dataset.docId || null,
         strNumber: cells[0].textContent,
         date:      cells[1].textContent,
         store:     cells[2].textContent,
@@ -2086,9 +2223,11 @@
     });
 
     // Store batch data and show rename dialog
-    pendingRenameBatch = { sentAt: now, rows: batchRows };
+    pendingRenameBatch = { rows: batchRows };
     document.getElementById('renameBatchInput').value = '';
-    document.getElementById('renameBatchDate').textContent = now;
+    // Default date picker to the date of the first record (not today)
+    const firstRecordDate = batchRows.length > 0 ? batchRows[0].date : todayLocal();
+    document.getElementById('renameBatchDatePicker').value = firstRecordDate;
     document.getElementById('renameBatchOverlay').classList.add('visible');
     setTimeout(() => document.getElementById('renameBatchInput').focus(), 100);
   }
@@ -2100,16 +2239,21 @@
 
   function confirmRenameBatch() {
     const customName = document.getElementById('renameBatchInput').value.trim();
+    const chosenDate = document.getElementById('renameBatchDatePicker').value;
     if (!customName) {
-      alert('Please enter a name for your records.');
+      showToast('Please enter a name for your records.', true);
+      return;
+    }
+    if (!chosenDate) {
+      showToast('Please select a date.', true);
       return;
     }
 
     const batch = pendingRenameBatch;
     const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
 
-    // Update sentAt with custom name
-    batch.sentAt = customName + ' — ' + batch.sentAt;
+    // Build sentAt from custom name + chosen date
+    batch.sentAt = customName + ' — ' + chosenDate;
 
     rows.forEach(tr => {
       const docId = tr.dataset.docId;
@@ -2137,7 +2281,7 @@
     closeCompile();
     closeRenameBatch();
     document.getElementById("sendHistoryBtn").classList.remove("visible");
-    alert("✅ Records saved as '" + customName + "'.");
+    showToast("✅ Records saved as '" + customName + "'.");
   }
 
   function renderHistory() {
@@ -2152,15 +2296,52 @@
       const batchIndex = historyBatches.length - 1 - i;
       const div = document.createElement("div");
       div.className = "history-group";
-      div.style.cursor = "pointer";
       div.innerHTML = `
-        <div class="history-group-header" onclick="viewBatch(${batchIndex})">
-          <span>${batch.sentAt}</span>
-          <span>${batch.rows.length} item(s)</span>
+        <div class="history-group-header" style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" class="batch-checkbox" data-index="${batchIndex}"
+            style="width:15px;height:15px;accent-color:#b45309;flex-shrink:0;cursor:pointer;"
+            onclick="event.stopPropagation();updateDeleteSelectedBtn()">
+          <span style="flex:1;cursor:pointer;" onclick="viewBatch(${batchIndex})">${batch.sentAt}</span>
+          <span style="cursor:pointer;" onclick="viewBatch(${batchIndex})">${batch.rows.length} item(s)</span>
         </div>
       `;
       body.appendChild(div);
     });
+  }
+
+  function updateDeleteSelectedBtn() {
+    const any = document.querySelectorAll('.batch-checkbox:checked').length > 0;
+    document.getElementById('deleteSelectedBatchesBtn').style.display = any ? 'inline-block' : 'none';
+  }
+
+  function deleteSelectedBatches() {
+    const checked = [...document.querySelectorAll('.batch-checkbox:checked')];
+    if (checked.length === 0) return;
+    const indices = checked.map(cb => parseInt(cb.dataset.index)).sort((a,b) => b - a);
+    indices.forEach(idx => {
+      const batch = historyBatches[idx];
+      if (!batch) return;
+      batch.rows.forEach(r => {
+        if (r.docId) {
+          // Fast path — we have the docId
+          db.collection("str_records").doc(r.docId).delete().catch(e => console.error(e));
+        } else {
+          // Fallback — query by strNumber + date + product
+          db.collection("str_records")
+            .where("strNumber", "==", r.strNumber)
+            .where("date", "==", r.date)
+            .where("product", "==", r.product)
+            .get()
+            .then(snap => snap.forEach(doc => doc.ref.delete()))
+            .catch(e => console.error(e));
+        }
+      });
+      historyBatches.splice(idx, 1);
+    });
+    localStorage.setItem('str_history', JSON.stringify(historyBatches));
+    document.getElementById('deleteSelectedBatchesBtn').style.display = 'none';
+    renderHistory();
+    showToast(`\uD83D\uDDD1\uFE0F ${indices.length} batch(es) deleted.`);
   }
 
   let currentViewBatchIndex = null;
@@ -2170,7 +2351,7 @@
     const batch = historyBatches[index];
     currentViewBatchIndex = index;
     batchEditMode = false;
-    document.getElementById("historyViewTitle").textContent = `📋 ${batch.sentAt}`;
+    document.getElementById("historyViewTitle").textContent = '\uD83D\uDCDA ' + batch.sentAt;
     document.getElementById("editBatchBtn").textContent = '✏️ Edit';
     document.getElementById("saveBatchBtn").style.display = 'none';
     renderBatchTable(batch, false);
@@ -2194,6 +2375,9 @@
           <td style="padding:9px 12px;">${r.remarks}</td>
           <td style="padding:9px 12px;">${r.refNumber}</td>
           <td style="padding:9px 12px;">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</td>
+          <td style="padding:9px 12px;text-align:center;">
+            <button onclick="deleteBatchRow(${i})" style="background:none;border:none;cursor:pointer;font-size:16px;line-height:1;" title="Delete row">&#x1F5D1;&#xFE0F;</button>
+          </td>
         </tr>`;
 
       const remSel = remarkOpts.map(o => `<option value="${o}" ${r.remarks===o?'selected':''}>${o||'—'}</option>`).join('');
@@ -2229,11 +2413,47 @@
               <th style="padding:10px 12px;text-align:left;">Remarks</th>
               <th style="padding:10px 12px;text-align:left;">REF #</th>
               <th style="padding:10px 12px;text-align:left;">Status</th>
+              <th style="padding:10px 12px;text-align:left;"></th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`;
+  }
+
+  function deleteBatchRow(rowIndex) {
+    const batch = historyBatches[currentViewBatchIndex];
+    if (!batch) return;
+    const row = batch.rows[rowIndex];
+
+    if (row) {
+      if (row.docId) {
+        db.collection("str_records").doc(row.docId).delete()
+          .catch(err => console.error("Firestore delete failed:", err));
+      } else {
+        db.collection("str_records")
+          .where("strNumber", "==", row.strNumber)
+          .where("date", "==", row.date)
+          .where("product", "==", row.product)
+          .get()
+          .then(snap => snap.forEach(doc => doc.ref.delete()))
+          .catch(err => console.error("Firestore delete failed:", err));
+      }
+    }
+
+    batch.rows.splice(rowIndex, 1);
+    localStorage.setItem('str_history', JSON.stringify(historyBatches));
+    renderHistory();
+    if (batch.rows.length === 0) {
+      historyBatches.splice(currentViewBatchIndex, 1);
+      localStorage.setItem('str_history', JSON.stringify(historyBatches));
+      renderHistory();
+      document.getElementById("historyViewOverlay").classList.remove("visible");
+      showToast("Batch removed — no rows remaining.");
+      return;
+    }
+    renderBatchTable(batch, false);
+    showToast("Row deleted.");
   }
 
   function toggleEditBatch() {
@@ -2286,7 +2506,7 @@
     document.getElementById("saveBatchBtn").style.display = 'none';
     renderBatchTable(batch, false);
     renderHistory();
-    alert('✅ Changes saved.');
+    showToast('✅ Changes saved.');
   }
 
   function closeHistoryView() {
@@ -2316,7 +2536,7 @@
   function confirmRenameHistoryBatch() {
     const newName = document.getElementById('renameHistoryBatchInput').value.trim();
     if (!newName) {
-      alert('Please enter a name for your records.');
+      showToast('Please enter a name for your records.', true);
       return;
     }
 
@@ -2335,10 +2555,10 @@
     renderHistory();
     
     // Update the modal title
-    document.getElementById('historyViewTitle').textContent = '📋 ' + newName;
+    document.getElementById('historyViewTitle').textContent = '\uD83D\uDCDA ' + newName;
     
     closeRenameHistoryBatch();
-    alert("✅ Record renamed to '" + newName + "'.");
+    showToast("✅ Record renamed to '" + newName + "'.");
   }
 
   function printBatch() {
@@ -2361,7 +2581,7 @@
         + '</tr>';
     });
 
-    const html = '<!DOCTYPE html><html><head><title>STR History</title>'
+    const html = '<!DOCTYPE html><html><head><title> </title>'
       + '<style>'
       + 'body{font-family:Segoe UI,Arial,sans-serif;padding:16px;margin:0}'
       + 'h3{font-size:13px;color:#b45309;margin-bottom:10px}'
@@ -2371,19 +2591,25 @@
       + 'tr:nth-child(even) td{background:#fffbeb}'
       + '@page{size:portrait;margin:10mm}'
       + '<\/style><\/head><body>'
-      + '<h3>STR History - ' + batch.sentAt + '</h3>'
+      + '<h3>STR Archived - ' + batch.sentAt + '</h3>'
       + '<table><thead><tr>'
       + '<th>STR #</th><th>Date</th><th>Store</th><th>Product</th>'
       + '<th>Qty</th><th>Unit</th><th>Remarks</th><th>REF #</th><th>Status</th>'
       + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>'
       + '<\/body><\/html>';
 
-    const win = window.open('', '_blank', 'width=900,height=600');
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    win.print();
-    win.close();
+    let iframe = document.getElementById('_printFrame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = '_printFrame';
+      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:none;';
+      document.body.appendChild(iframe);
+    }
+    iframe.srcdoc = html;
+    iframe.onload = function() {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    };
   }
 
   function exportAllToExcel() {
@@ -2405,7 +2631,7 @@
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
     });
 
-    XLSX.writeFile(wb, `STR_Records_${new Date().toISOString().slice(0,10)}.xlsx`);
+    XLSX.writeFile(wb, 'STR Records.xlsx');
   }
 
   function toggleGroup(header) {
@@ -2418,9 +2644,15 @@
   }
 
   function clearHistory() {
-    if (!confirm("Clear all history? This will also delete archived records from Firestore.")) return;
+    if (historyBatches.length === 0) {
+      showToast("You don't have any records to clear.", true);
+      return;
+    }
+    document.getElementById('clearHistoryOverlay').classList.add('visible');
+  }
 
-    // Delete all archived docs from Firestore
+  function confirmClearHistory() {
+    document.getElementById('clearHistoryOverlay').classList.remove('visible');
     db.collection("str_records").get().then(snapshot => {
       const batch = db.batch();
       snapshot.docs.forEach(doc => {
@@ -2432,6 +2664,7 @@
     historyBatches.length = 0;
     localStorage.removeItem('str_history');
     renderHistory();
+    showToast("All archived records cleared.");
   }
 
   function toggleSidebar() {
@@ -2547,6 +2780,7 @@
       console.error("Failed to load records:", err);
     }
     updatePendingBadge();
+    sortTableByDate();
   }
 
   // ─── DESKTOP SCROLL ICONS ─────────────────────────────────────────
@@ -2727,8 +2961,61 @@
 
   function toggleCalc() {
     const p = document.getElementById('calcPanel');
-    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    const btn = document.getElementById('calcBtn');
+    const isOpen = p.style.display !== 'none';
+    p.style.display = isOpen ? 'none' : 'block';
+    if (btn) btn.style.visibility = isOpen ? '' : 'hidden';
+    // Restore the other float buttons visibility
+    const productsBtn = document.getElementById('btnProducts_float');
+    const historyBtn  = document.getElementById('btnHistory_float');
+    if (productsBtn) productsBtn.style.visibility = '';
+    if (historyBtn)  historyBtn.style.visibility  = '';
   }
+
+  // ── CALC DRAG ──────────────────────────────────────────────────────
+  (function() {
+    const handle = document.getElementById('calcDragHandle');
+    const panel  = document.getElementById('calcPanel');
+    let dragging = false, startX, startY, origLeft, origTop;
+
+    function getPos() {
+      const r = panel.getBoundingClientRect();
+      return { left: r.left, top: r.top };
+    }
+
+    function startDrag(cx, cy) {
+      dragging = true;
+      const pos = getPos();
+      // Switch to left/top positioning
+      panel.style.right = 'auto';
+      panel.style.left  = pos.left + 'px';
+      panel.style.top   = pos.top  + 'px';
+      startX = cx; startY = cy;
+      origLeft = pos.left; origTop = pos.top;
+      handle.style.cursor = 'grabbing';
+    }
+
+    function moveDrag(cx, cy) {
+      if (!dragging) return;
+      const dx = cx - startX, dy = cy - startY;
+      const newLeft = Math.max(0, Math.min(window.innerWidth  - panel.offsetWidth,  origLeft + dx));
+      const newTop  = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, origTop  + dy));
+      panel.style.left = newLeft + 'px';
+      panel.style.top  = newTop  + 'px';
+    }
+
+    function endDrag() { dragging = false; handle.style.cursor = 'grab'; }
+
+    // Mouse
+    handle.addEventListener('mousedown',  e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+    document.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
+    document.addEventListener('mouseup',   endDrag);
+
+    // Touch
+    handle.addEventListener('touchstart', e => { const t = e.touches[0]; startDrag(t.clientX, t.clientY); }, { passive: true });
+    document.addEventListener('touchmove', e => { if (!dragging) return; e.preventDefault(); const t = e.touches[0]; moveDrag(t.clientX, t.clientY); }, { passive: false });
+    document.addEventListener('touchend',  endDrag);
+  })();
 
   function calcPress(val) {
     const display = document.getElementById('calcDisplay');
