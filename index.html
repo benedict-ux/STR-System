@@ -611,6 +611,49 @@
   tbody tr:hover { background: #fffbeb; }
   tbody td { padding: 9px 10px; color: #444; white-space: nowrap; }
 
+  /* ── STR RECORD BADGES ── */
+  .str-badge {
+    border-radius: 20px; font-size: 11px; font-weight: 700;
+    padding: 2px 10px; margin-left: 6px; vertical-align: middle;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .badge-pending          { background: #fff8e1; color: #f59e0b; }
+  .badge-pending.active   { background: #f59e0b; color: #fff; }
+  .badge-str              { background: #fee2e2; color: #dc2626; }
+  .badge-str.active       { background: #dc2626; color: #fff; }
+  .badge-ref              { background: #fce7f3; color: #be185d; }
+  .badge-ref.active       { background: #be185d; color: #fff; }
+
+  body.dark .badge-pending        { background: #333; color: #e5e5e5; }
+  body.dark .badge-pending.active { background: #555; color: #fff; }
+  body.dark .badge-str            { background: #333; color: #e5e5e5; }
+  body.dark .badge-str.active     { background: #555; color: #fff; }
+  body.dark .badge-ref            { background: #333; color: #e5e5e5; }
+  body.dark .badge-ref.active     { background: #555; color: #fff; }
+  .inline-edit {
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px dashed #ccc;
+    border-radius: 0;
+    font-size: 13px;
+    color: inherit;
+    padding: 2px 4px;
+    width: 90px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .inline-edit:focus {
+    border-bottom-color: #b45309;
+    background: #fffbeb;
+    border-radius: 4px;
+  }
+  .inline-edit::placeholder { color: #bbb; font-style: italic; }
+  body.dark .inline-edit { border-bottom-color: #444; color: #ccc; background: transparent; }
+  body.dark .inline-edit:focus { border-bottom-color: #888; background: #2a2a2a; color: #fff; }
+  body.dark .inline-edit::placeholder { color: #555; }
+  body.dark td .inline-edit { background: transparent !important; color: #ccc !important; }
+  body.dark .inline-edit:-webkit-autofill { -webkit-box-shadow: 0 0 0 100px #1c1c1c inset !important; -webkit-text-fill-color: #ccc !important; }
+
   .empty-row td {
     text-align: center; color: #aaa; padding: 30px; font-style: italic;
   }
@@ -1426,7 +1469,7 @@
 
   <div class="table-section">
     <div class="table-actions">
-      <div class="section-title" style="margin:0;padding:0;border:none;line-height:2;">STR Records <span id="pendingBadge" style="display:none;background:#fff8e1;color:#555;border-radius:20px;font-size:11px;font-weight:700;padding:2px 10px;margin-left:8px;vertical-align:middle;cursor:pointer;transition:all 0.2s;" onclick="togglePendingFilter()" title="Click to filter pending records"></span></div>
+      <div class="section-title" style="margin:0;padding:0;border:none;line-height:2;">STR Records <span id="pendingBadge" class="str-badge badge-pending" style="display:none;" onclick="togglePendingFilter()" title="Click to filter pending records"></span><span id="missingStrBadge" class="str-badge badge-str" style="display:none;" onclick="toggleMissingStrFilter()" title="Click to filter records missing STR#"></span><span id="missingRefBadge" class="str-badge badge-ref" style="display:none;" onclick="toggleMissingRefFilter()" title="Click to filter records missing REF#"></span></div>
       <div style="margin-left:auto;display:flex;gap:10px;">
         <button class="send-history-btn" id="sendHistoryBtn" onclick="sendToHistory()">&#x1F4DA; Send to Archived</button>
       </div>
@@ -2089,8 +2132,8 @@
     const date      = document.getElementById("date").value;
     const store     = document.getElementById("store").value;
 
-    if (!strNumber || !date || !store) {
-      showToast("Please fill in STR Number, Date, and Store.", true);
+    if (!date || !store) {
+      showToast("Please fill in Date and Store.", true);
       return;
     }
 
@@ -2119,7 +2162,7 @@
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${strNumber}</td>
+          <td><input class="inline-edit str-num-input" value="${strNumber}" placeholder="STR #" title="Click to edit STR #" onblur="saveInlineEdit(this,'strNumber')" onkeydown="if(event.key==='Enter')this.blur()" oninput="updateMissingBadge()"></td>
           <td>${date}</td>
           <td>${store}</td>
           <td>${product}</td>
@@ -2134,7 +2177,7 @@
               <option value="SAFE KEEP" ${remarks==='SAFE KEEP'?'selected':''}>SAFE KEEP</option>
             </select>
           </td>
-          <td>${refNumber}</td>
+          <td><input class="inline-edit ref-num-input" value="${refNumber}" placeholder="REF #" title="Click to edit REF #" onblur="saveInlineEdit(this,'refNumber')" onkeydown="if(event.key==='Enter')this.blur()" oninput="updateMissingBadge()"></td>
           <td>
             <select class="status-select pending" onchange="updateStatus(this)">
               <option value="pending"   selected>🟡 Pending</option>
@@ -2198,37 +2241,87 @@
     rows.forEach(r => tbody.appendChild(r));
   }
 
+  let missingStrFilterActive = false;
+  let missingRefFilterActive = false;
+
   function updatePendingBadge() {
     const pending = document.querySelectorAll('#strTable tbody .status-select.pending').length;
     const badge = document.getElementById('pendingBadge');
-    const isDark = document.body.classList.contains('dark');
     if (pending > 0) {
       badge.textContent = '🟡 ' + pending + ' Pending';
       badge.style.display = 'inline';
-      if (pendingFilterActive) {
-        badge.style.background = isDark ? '#444' : '#f59e0b';
-        badge.style.color = '#fff';
-      } else {
-        badge.style.background = isDark ? '#2a2a2a' : '#fff8e1';
-        badge.style.color = isDark ? '#ccc' : '#f59e0b';
-      }
+      badge.classList.toggle('active', pendingFilterActive);
     } else {
       badge.style.display = 'none';
+      if (pendingFilterActive) pendingFilterActive = false;
+    }
+    updateMissingBadge();
+  }
+
+  function updateMissingBadge() {
+    const rows = document.querySelectorAll('#strTable tbody tr:not(.empty-row)');
+    let missingStr = 0, missingRef = 0;
+    rows.forEach(row => {
+      if (!row.querySelector('.str-num-input')?.value.trim()) missingStr++;
+      if (!row.querySelector('.ref-num-input')?.value.trim()) missingRef++;
+    });
+
+    const strBadge = document.getElementById('missingStrBadge');
+    if (missingStr > 0) {
+      strBadge.textContent = '🔴 ' + missingStr + ' No STR#';
+      strBadge.style.display = 'inline';
+      strBadge.classList.toggle('active', missingStrFilterActive);
+    } else {
+      strBadge.style.display = 'none';
+      if (missingStrFilterActive) missingStrFilterActive = false;
+    }
+
+    const refBadge = document.getElementById('missingRefBadge');
+    if (missingRef > 0) {
+      refBadge.textContent = '🟣 ' + missingRef + ' No REF#';
+      refBadge.style.display = 'inline';
+      refBadge.classList.toggle('active', missingRefFilterActive);
+    } else {
+      refBadge.style.display = 'none';
+      if (missingRefFilterActive) missingRefFilterActive = false;
     }
   }
 
   function togglePendingFilter() {
     pendingFilterActive = !pendingFilterActive;
-    const tbody = document.querySelector("#strTable tbody");
-    const rows = tbody.querySelectorAll("tr:not(.empty-row)");
-
+    if (pendingFilterActive) { missingStrFilterActive = false; missingRefFilterActive = false; }
+    const rows = document.querySelectorAll('#strTable tbody tr:not(.empty-row)');
     if (pendingFilterActive) {
+      rows.forEach(row => { row.style.display = row.querySelector('.status-select.pending') ? '' : 'none'; });
+    } else {
+      rows.forEach(row => row.style.display = '');
+    }
+    updatePendingBadge();
+  }
+
+  function toggleMissingStrFilter() {
+    missingStrFilterActive = !missingStrFilterActive;
+    if (missingStrFilterActive) { pendingFilterActive = false; missingRefFilterActive = false; }
+    const rows = document.querySelectorAll('#strTable tbody tr:not(.empty-row)');
+    if (missingStrFilterActive) {
       rows.forEach(row => {
-        const isPending = row.querySelector(".status-select.pending");
-        row.style.display = isPending ? '' : 'none';
+        row.style.display = !(row.querySelector('.str-num-input')?.value.trim()) ? '' : 'none';
       });
     } else {
-      // Always show ALL rows when filter is off
+      rows.forEach(row => row.style.display = '');
+    }
+    updatePendingBadge();
+  }
+
+  function toggleMissingRefFilter() {
+    missingRefFilterActive = !missingRefFilterActive;
+    if (missingRefFilterActive) { pendingFilterActive = false; missingStrFilterActive = false; }
+    const rows = document.querySelectorAll('#strTable tbody tr:not(.empty-row)');
+    if (missingRefFilterActive) {
+      rows.forEach(row => {
+        row.style.display = !(row.querySelector('.ref-num-input')?.value.trim()) ? '' : 'none';
+      });
+    } else {
       rows.forEach(row => row.style.display = '');
     }
     updatePendingBadge();
@@ -2258,6 +2351,50 @@
     }
   }
 
+  // Helper: get cell text, handles inline-edit inputs
+  function cellVal(cell) {
+    const input = cell.querySelector('input.inline-edit');
+    return input ? input.value : cell.textContent;
+  }
+
+  function saveInlineEdit(input, field) {
+    const tr = input.closest('tr');
+    const docId = tr && tr.dataset.docId;
+    if (docId) {
+      db.collection('str_records').doc(docId)
+        .update({ [field]: input.value.trim() })
+        .catch(err => console.error('Inline save failed:', err));
+    }
+
+    if (missingStrFilterActive && field === 'strNumber') {
+      if (input.value.trim()) {
+        tr.style.display = 'none';
+        // Check if any rows still missing STR#
+        const stillMissing = [...document.querySelectorAll('#strTable tbody tr:not(.empty-row)')]
+          .filter(r => !r.querySelector('.str-num-input')?.value.trim()).length;
+        if (stillMissing === 0) {
+          missingStrFilterActive = false;
+          document.querySelectorAll('#strTable tbody tr:not(.empty-row)').forEach(r => r.style.display = '');
+        }
+      }
+    }
+
+    if (missingRefFilterActive && field === 'refNumber') {
+      if (input.value.trim()) {
+        tr.style.display = 'none';
+        // Check if any rows still missing REF#
+        const stillMissing = [...document.querySelectorAll('#strTable tbody tr:not(.empty-row)')]
+          .filter(r => !r.querySelector('.ref-num-input')?.value.trim()).length;
+        if (stillMissing === 0) {
+          missingRefFilterActive = false;
+          document.querySelectorAll('#strTable tbody tr:not(.empty-row)').forEach(r => r.style.display = '');
+        }
+      }
+    }
+
+    updateMissingBadge();
+  }
+
   function deleteRow(btn) {
     const tbody = document.querySelector("#strTable tbody");
     const tr = btn.closest("tr");
@@ -2285,14 +2422,14 @@
       const statusRaw = cells[8].querySelector("select") ? cells[8].querySelector("select").value : cells[8].textContent;
       const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1);
       rowsHtml += '<tr>'
-        + '<td>' + cells[0].textContent + '</td>'
+        + '<td>' + cellVal(cells[0]) + '</td>'
         + '<td>' + cells[1].textContent + '</td>'
         + '<td>' + cells[2].textContent + '</td>'
         + '<td>' + cells[3].textContent + '</td>'
         + '<td>' + cells[4].textContent + '</td>'
         + '<td>' + cells[5].textContent + '</td>'
         + '<td>' + remarks + '</td>'
-        + '<td>' + cells[7].textContent + '</td>'
+        + '<td>' + cellVal(cells[7]) + '</td>'
         + '<td>' + status + '</td>'
         + '</tr>';
     });
@@ -2392,14 +2529,14 @@
       const row = document.createElement("tr");
       row.style.borderBottom = `1px solid ${borderColor}`;
       row.innerHTML = `
-        <td style="padding:10px 12px;color:${tdColor};">${cells[0].textContent}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${cellVal(cells[0])}</td>
         <td style="padding:10px 12px;color:${tdColor};">${cells[1].textContent}</td>
         <td style="padding:10px 12px;color:${tdColor};">${cells[2].textContent}</td>
         <td style="padding:10px 12px;color:${tdColor};">${cells[3].textContent}</td>
         <td style="padding:10px 12px;color:${tdColor};">${cells[4].textContent}</td>
         <td style="padding:10px 12px;color:${tdColor};">${cells[5].textContent}</td>
         <td style="padding:10px 12px;color:${tdColor};">${remarks}</td>
-        <td style="padding:10px 12px;color:${tdColor};">${cells[7].textContent}</td>
+        <td style="padding:10px 12px;color:${tdColor};">${cellVal(cells[7])}</td>
         <td style="padding:10px 12px;color:${tdColor};">${statusLabels[status] || status}</td>
       `;
       tbody.appendChild(row);
@@ -2427,14 +2564,14 @@
       const cells = tr.querySelectorAll("td");
       batchRows.push({
         docId:     tr.dataset.docId || null,
-        strNumber: cells[0].textContent,
+        strNumber: cellVal(cells[0]),
         date:      cells[1].textContent,
         store:     cells[2].textContent,
         product:   cells[3].textContent,
         qty:       cells[4].textContent,
         unit:      cells[5].textContent,
         remarks:   cells[6].querySelector("select")?.value || '',
-        refNumber: cells[7].textContent,
+        refNumber: cellVal(cells[7]),
         status:    cells[8].querySelector("select")?.value || 'pending'
       });
     });
@@ -2980,7 +3117,7 @@
         const tr = document.createElement("tr");
         tr.dataset.docId = doc.id;
         tr.innerHTML = `
-          <td>${d.strNumber || ''}</td>
+          <td><input class="inline-edit str-num-input" value="${d.strNumber || ''}" placeholder="STR #" title="Click to edit STR #" onblur="saveInlineEdit(this,'strNumber')" onkeydown="if(event.key==='Enter')this.blur()" oninput="updateMissingBadge()"></td>
           <td>${d.date || ''}</td>
           <td>${d.store || ''}</td>
           <td>${d.product || ''}</td>
@@ -2995,7 +3132,7 @@
               <option value="SAFE KEEP" ${d.remarks==='SAFE KEEP'?'selected':''}>SAFE KEEP</option>
             </select>
           </td>
-          <td>${d.refNumber || ''}</td>
+          <td><input class="inline-edit ref-num-input" value="${d.refNumber || ''}" placeholder="REF #" title="Click to edit REF #" onblur="saveInlineEdit(this,'refNumber')" onkeydown="if(event.key==='Enter')this.blur()" oninput="updateMissingBadge()"></td>
           <td>
             <select class="status-select ${d.status || 'pending'}" onchange="updateStatus(this)">
               <option value="pending"   ${d.status==='pending'?'selected':''}>🟡 Pending</option>
