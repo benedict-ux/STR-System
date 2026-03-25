@@ -159,6 +159,8 @@
 
   /* Desktop floating edge buttons — all hidden by default */
   #calcBtn,
+  #summaryBtn,
+  #inventoryBtn,
   #btnProducts_float,
   #btnHistory_float {
     position: fixed;
@@ -187,9 +189,13 @@
   /* Desktop only — show float buttons */
   @media (min-width: 1025px) {
     #calcBtn { display: flex !important; }
+    #summaryBtn { display: flex !important; }
+    #inventoryBtn { display: flex !important; }
     #btnProducts_float.scroll-show,
     #btnHistory_float.scroll-show { display: flex !important; }
     #calcBtn           { top: 108px; }
+    #summaryBtn        { top: 156px; }
+    #inventoryBtn      { top: 204px; }
     #btnProducts_float { top: 12px; }
     #btnHistory_float  { top: 60px; }
   }
@@ -1254,9 +1260,30 @@
   body.dark .add-btn { background: #1c1c1c !important; color: #ccc !important; border-color: #555 !important; }
   body.dark .add-btn:hover { background: #2a2a2a !important; color: #fff !important; }
   body.dark .toggle-history-btn { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.2) !important; color: #ccc !important; }
-  body.dark #calcBtn, body.dark #btnProducts_float, body.dark #btnHistory_float { background: #2a2a2a !important; color: #ccc !important; box-shadow: -3px 3px 16px rgba(0,0,0,0.5) !important; }
+  body.dark #calcBtn, body.dark #summaryBtn, body.dark #inventoryBtn, body.dark #btnProducts_float, body.dark #btnHistory_float { background: #2a2a2a !important; color: #ccc !important; box-shadow: -3px 3px 16px rgba(0,0,0,0.5) !important; }
   body.dark #mobileFloatToggle, body.dark .mobile-float-btn { background: #2a2a2a !important; color: #ccc !important; }
   body.dark #scrollTopBtn { background: #2a2a2a !important; color: #ccc !important; }
+  body.dark #directionSelect { background: transparent !important; color: #ccc !important; }
+  body.dark .direction-wrapper { background: #2a2a2a !important; border-color: #444 !important; }
+  body.dark .direction-wrapper span { color: #ccc !important; }
+  body.dark .direction-label { color: #ccc !important; }
+  body.dark .direction-select { background: #2a2a2a !important; border-color: #444 !important; color: #ccc !important; }
+  .direction-wrapper { background: #fff8e1; border: 1.5px solid #fde68a; }
+  .direction-label { color: #b45309; }
+  #dirDropdownMenu { background: #fff8e1; border: 1.5px solid #fde68a; }
+  #dirDropdownMenu div:hover { background: #fde68a; }
+  #dirDropdownMenu div { color: #333; }
+  #dirDropdownBtn { color: #333 !important; }
+  body.dark .direction-wrapper { background: #2a2a2a !important; border-color: #444 !important; }
+  body.dark .direction-label { color: #ccc !important; }
+  body.dark #dirDropdownBtn { color: #ccc !important; }
+  body.dark #dirDropdownMenu { background: #2a2a2a !important; border-color: #444 !important; }
+  body.dark #dirDropdownMenu div { color: #ccc !important; }
+  body.dark #dirDropdownMenu div:hover { background: #3a3a3a !important; }
+  body.dark .direction-select { background: #2a2a2a !important; border-color: #444 !important; color: #ccc !important; }
+  body.dark #otherStoreModal { background: #1e1e1e !important; }
+  body.dark #otherStoreModal div[style*="color:#666"] { color: #999 !important; }
+  body.dark #otherStoreInput { background: #2a2a2a !important; border-color: #444 !important; color: #fff !important; }
   /* Modals */
   body.dark .compile-overlay, body.dark .picker-overlay { background: rgba(0,0,0,0.75); }
   body.dark .compile-modal, body.dark .picker-modal { background: #1e1e1e; }
@@ -1314,6 +1341,19 @@
   body.dark #calcPanel button[onclick*="calcPress('C')"] { background: #3a1a1a !important; color: #fca5a5 !important; }
   /* Status selects */
   body.dark .status-select.pending   { background: #2a2a2a; color: #ccc; border-color: #444; }
+  /* Summary Panel */
+  body.dark #summaryPanel { background: #1e1e1e !important; box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important; }
+  body.dark #summaryDragHandle { background: #252525 !important; color: #fff !important; }
+  body.dark #summaryBody { background: #1e1e1e !important; color: #ccc !important; }
+  body.dark .summary-row { border-color: #333 !important; }
+  body.dark .summary-store { color: #e5e5e5 !important; }
+  body.dark .summary-empty { color: #666 !important; }
+  /* Inventory Panel */
+  body.dark #inventoryPanel { background: #1e1e1e !important; box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important; }
+  body.dark #inventoryDragHandle { background: #252525 !important; color: #fff !important; }  body.dark #inventoryBody { background: #1e1e1e !important; color: #ccc !important; }
+  body.dark .inv-row { border-color: #333 !important; background: #252525 !important; }
+  body.dark .inv-name { color: #e5e5e5 !important; }
+  body.dark .inv-stock-input { background: #2a2a2a !important; border-color: #444 !important; color: #fff !important; }
   body.dark .status-select.returned  { background: #0a1e2e; color: #7dd3fc; border-color: #0369a1; }
   body.dark .status-select.paid      { background: #0a1e10; color: #86efac; border-color: #166534; }
   body.dark .status-select.cancelled { background: #1e0a0a; color: #fca5a5; border-color: #7f1d1d; }
@@ -1454,6 +1494,7 @@
           <option>Jollibee Glorietta</option>
           <option>Jollibee Edsa Arayat</option>
           <option>Jollibee Edsa Maya</option>
+          <option value="__other__">✏️ Other Store...</option>
         </select>
       </div>
     </div>
@@ -1463,6 +1504,19 @@
 
     <div class="btn-row">
       <button class="add-btn" onclick="addItem()">+ Add Item</button>
+      <div class="direction-wrapper" style="display:flex;align-items:center;gap:6px;border-radius:10px;padding:4px 10px;position:relative;">
+        <span class="direction-label" style="font-size:12px;font-weight:700;">Direction:</span>
+        <div id="dirDropdown" style="position:relative;display:inline-block;">
+          <button id="dirDropdownBtn" onclick="toggleDirDropdown()" style="border:none;background:transparent;font-size:12px;font-weight:700;color:#b45309;cursor:pointer;outline:none;padding:0;display:flex;align-items:center;gap:4px;">
+            <span id="dirDropdownLabel">Store owes EDKAM</span> ▾
+          </button>
+          <div id="dirDropdownMenu" style="display:none;position:absolute;top:100%;left:0;z-index:999;min-width:220px;border-radius:8px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.2);margin-top:4px;">
+            <div onclick="setDirection('EDKAM→STORE')" id="dirOpt1" style="padding:10px 14px;cursor:pointer;font-size:12px;font-weight:700;">Store owes EDKAM</div>
+            <div onclick="setDirection('STORE→EDKAM')" id="dirOpt2" style="padding:10px 14px;cursor:pointer;font-size:12px;font-weight:700;">EDKAM owes Store</div>
+          </div>
+        </div>
+        <input type="hidden" id="directionSelect" value="EDKAM→STORE">
+      </div>
       <button class="generate-btn" onclick="generateSTR()">Generate STR</button>
     </div>
   </div>
@@ -1486,6 +1540,7 @@
           <th>Unit</th>
           <th>Remarks</th>
           <th>REF #</th>
+          <th>Direction</th>
           <th>Status</th>
           <th>Action</th>
         </tr>
@@ -1507,6 +1562,8 @@
 </div> <!-- /.container -->
 
 <button id="calcBtn" onclick="toggleCalc()" title="Calculator">🧮</button>
+<button id="summaryBtn" onclick="toggleSummary()" title="Store Summary">&#x1F4CA;</button>
+<button id="inventoryBtn" onclick="toggleInventory()" title="Inventory">&#x1F4E6;</button>
 <button id="btnProducts_float" onclick="toggleProductsSidebar()" title="Products">&#x1F6D2;</button>
 <button id="btnHistory_float" onclick="toggleSidebar()" title="Archived">&#x1F4DA;</button>
 
@@ -1517,6 +1574,23 @@
     <button class="mobile-float-btn" id="mobileBtnProducts" onclick="toggleProductsSidebar()" title="Products">🛒</button>
     <button class="mobile-float-btn" id="mobileBtnHistory" onclick="toggleSidebar()" title="Archived">&#x1F4DA;</button>
     <button class="mobile-float-btn" onclick="toggleCalc()" title="Calculator">🧮</button>
+    <button class="mobile-float-btn" onclick="toggleSummary()" title="Store Summary">&#x1F4CA;</button>
+    <button class="mobile-float-btn" onclick="toggleInventory()" title="Inventory">&#x1F4E6;</button>
+  </div>
+</div>
+
+<!-- OTHER STORE MODAL -->
+<div id="otherStoreOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;display:none;align-items:center;justify-content:center;">
+  <div id="otherStoreModal" style="background:#fff;border-radius:16px;padding:24px;width:min(360px,90vw);box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+    <div style="font-size:15px;font-weight:700;color:#b45309;margin-bottom:6px;">&#x1F3EA; Other Store</div>
+    <div style="font-size:13px;color:#666;margin-bottom:14px;">Please type your store branch name:</div>
+    <input id="otherStoreInput" type="text" placeholder="e.g. Jollibee Sta. Mesa"
+      style="width:100%;padding:10px 14px;border:1.5px solid #fde68a;border-radius:10px;font-size:14px;background:#fffbeb;color:#333;box-sizing:border-box;outline:none;"
+      onkeydown="if(event.key==='Enter')confirmOtherStore()">
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button onclick="cancelOtherStore()" style="padding:8px 18px;border:1.5px solid #e0e0e0;border-radius:8px;background:#f5f5f5;color:#555;font-size:13px;cursor:pointer;">Cancel</button>
+      <button onclick="confirmOtherStore()" style="padding:8px 18px;border:none;border-radius:8px;background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">OK</button>
+    </div>
   </div>
 </div>
 
@@ -1548,6 +1622,29 @@
       <button onclick="calcPress('.')"    style="padding:10px;background:#fffbeb;color:#333;border:1px solid #fde68a;border-radius:8px;font-size:14px;cursor:pointer;">.</button>
       <button onclick="calcPress('=')"    style="padding:10px;background:linear-gradient(135deg,#b45309,#f59e0b);color:white;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">=</button>
     </div>
+  </div>
+</div>
+
+<!-- STORE SUMMARY PANEL -->
+<div id="summaryPanel" style="display:none;position:fixed;top:160px;right:56px;z-index:400;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);width:360px;overflow:hidden;">
+  <div id="summaryDragHandle" style="padding:12px 16px;background:linear-gradient(135deg,#b45309,#f59e0b);color:white;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:grab;user-select:none;">
+    &#x1F4CA; Store Summary
+    <button onclick="toggleSummary()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px;">&#x2715;</button>
+  </div>
+  <div id="summaryBody" style="padding:12px;max-height:400px;overflow-y:auto;background:#fff;font-size:13px;">
+    <div style="color:#999;text-align:center;padding:16px;">No records yet.</div>
+  </div>
+</div>
+
+<!-- INVENTORY PANEL -->
+<div id="inventoryOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:399;" onclick="toggleInventory()"></div>
+<div id="inventoryPanel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:400;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.35);width:min(600px,95vw);overflow:hidden;">
+  <div id="inventoryDragHandle" style="padding:12px 16px;background:linear-gradient(135deg,#b45309,#f59e0b);color:white;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
+    &#x1F4E6; Inventory
+    <button onclick="toggleInventory()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:13px;">&#x2715;</button>
+  </div>
+  <div id="inventoryBody" style="padding:12px;max-height:70vh;overflow-y:auto;background:#fff;font-size:13px;">
+    <div style="color:#999;text-align:center;padding:16px;">Loading...</div>
   </div>
 </div>
 
@@ -1911,7 +2008,9 @@
     // Clean up early dark class from <html>
     document.documentElement.classList.remove('dark-early');
     restoreFormInputs();
+    updateDirectionLabels();
     loadProductsFromFirestore();
+    loadInventoryStocks();
     loadRecordsFromFirestore();
     renderHistory();
     addItem();
@@ -1974,7 +2073,14 @@
     const id = _pendingDeleteProductId;
     if (!id) return;
     try {
+      const product = productItems.find(p => p.id === id);
       await db.collection("str_items").doc(id).delete();
+      // Also delete from inventory if exists
+      if (product) {
+        const invSnap = await db.collection('str_inventory').where('name','==',product.name).get();
+        invSnap.docs.forEach(doc => doc.ref.delete());
+        delete inventoryStocks[product.name];
+      }
       productItems = productItems.filter(p => p.id !== id);
       renderProducts();
       buildPickerChips();
@@ -2131,6 +2237,7 @@
     const refNumber = document.getElementById("refNumber").value.trim();
     const date      = document.getElementById("date").value;
     const store     = document.getElementById("store").value;
+    const direction = document.getElementById("directionSelect").value;
 
     if (!date || !store) {
       showToast("Please fill in Date and Store.", true);
@@ -2179,6 +2286,12 @@
           </td>
           <td><input class="inline-edit ref-num-input" value="${refNumber}" placeholder="REF #" title="Click to edit REF #" onblur="saveInlineEdit(this,'refNumber')" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit(this,'refNumber');this.blur();}" oninput="autoSaveInlineEdit(this,'refNumber')"></td>
           <td>
+            <select class="direction-select" onchange="saveDirectionEdit(this)" style="font-size:11px;font-weight:700;border-radius:6px;border:1.5px solid #fde68a;padding:2px 4px;cursor:pointer;">
+              <option value="EDKAM→STORE" ${direction==='EDKAM→STORE'?'selected':''}>${store} owes EDKAM</option>
+              <option value="STORE→EDKAM" ${direction==='STORE→EDKAM'?'selected':''}>EDKAM owes ${store}</option>
+            </select>
+          </td>
+          <td>
             <select class="status-select pending" onchange="updateStatus(this)">
               <option value="pending"   selected>🟡 Pending</option>
               <option value="returned">🔵 Returned</option>
@@ -2197,6 +2310,7 @@
         db.collection("str_records").add({
           strNumber, refNumber, date, store,
           product, qty, unit, remarks,
+          direction,
           status: "pending",
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }).then(docRef => {
@@ -2225,6 +2339,7 @@
     localStorage.removeItem("str_form");
     addItem();
     updatePendingBadge();
+    if (document.getElementById('inventoryPanel')?.style.display !== 'none') renderInventory();
   }
 
   // ─── HELPERS ───────────────────────────────────────────────────────
@@ -2373,12 +2488,29 @@
         }
       }
     }
+    // Refresh summary if open
+    if (document.getElementById('summaryPanel')?.style.display !== 'none') renderSummary();
+    // Refresh inventory if open
+    setTimeout(() => {
+      if (document.getElementById('inventoryPanel')?.style.display !== 'none') renderInventory();
+    }, 0);
   }
 
   // Helper: get cell text, handles inline-edit inputs
   function cellVal(cell) {
     const input = cell.querySelector('input.inline-edit');
     return input ? input.value : cell.textContent;
+  }
+
+  function saveDirectionEdit(sel) {
+    const tr = sel.closest('tr');
+    const docId = tr && tr.dataset.docId;
+    if (docId) {
+      db.collection('str_records').doc(docId)
+        .update({ direction: sel.value })
+        .catch(err => console.error('Direction save failed:', err));
+    }
+    if (document.getElementById('summaryPanel')?.style.display !== 'none') renderSummary();
   }
 
   function saveInlineEdit(input, field) {
@@ -2473,7 +2605,7 @@
     rows.forEach(function(tr) {
       const cells = tr.querySelectorAll("td");
       const remarks = cells[6].querySelector("select") ? cells[6].querySelector("select").value : cells[6].textContent;
-      const statusRaw = cells[8].querySelector("select") ? cells[8].querySelector("select").value : cells[8].textContent;
+      const statusRaw = cells[9].querySelector("select") ? cells[9].querySelector("select").value : cells[9].textContent;
       const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1);
       rowsHtml += '<tr>'
         + '<td>' + cellVal(cells[0]) + '</td>'
@@ -2578,7 +2710,7 @@
     rows.forEach(tr => {
       const cells = tr.querySelectorAll("td");
       const remarks = cells[6].querySelector("select")?.value || '';
-      const status  = cells[8].querySelector("select")?.value || 'pending';
+      const status  = cells[9].querySelector("select")?.value || 'pending';
       const statusLabels = { pending:'🟡 Pending', returned:'🔵 Returned', paid:'🟢 Paid', cancelled:'🔴 Cancelled' };
       const row = document.createElement("tr");
       row.style.borderBottom = `1px solid ${borderColor}`;
@@ -2626,7 +2758,8 @@
         unit:      cells[5].textContent,
         remarks:   cells[6].querySelector("select")?.value || '',
         refNumber: cellVal(cells[7]),
-        status:    cells[8].querySelector("select")?.value || 'pending'
+        direction: cells[8].querySelector("select")?.value || 'EDKAM→STORE',
+        status:    cells[9].querySelector("select")?.value || 'pending'
       });
     });
 
@@ -2788,6 +2921,7 @@
       : 'padding:4px 6px;border:1.5px solid #fde68a;border-radius:6px;font-size:12px;';
 
     const rows = batch.rows.map((r, i) => {
+      const dirLabel = (r.direction||'EDKAM→STORE') === 'STORE→EDKAM' ? `EDKAM owes ${r.store||'Store'}` : `${r.store||'Store'} owes EDKAM`;
       if (!editable) return `
         <tr style="border-bottom:1px solid ${borderColor};">
           <td style="padding:9px 12px;color:${tdColor};">${r.strNumber}</td>
@@ -2798,6 +2932,7 @@
           <td style="padding:9px 12px;color:${tdColor};">${r.unit}</td>
           <td style="padding:9px 12px;color:${tdColor};">${r.remarks}</td>
           <td style="padding:9px 12px;color:${tdColor};">${r.refNumber}</td>
+          <td style="padding:9px 12px;color:${tdColor};">${dirLabel}</td>
           <td style="padding:9px 12px;color:${tdColor};">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</td>
           <td style="padding:9px 12px;text-align:center;">
             <button onclick="deleteBatchRow(${i})" style="background:none;border:none;cursor:pointer;font-size:16px;line-height:1;" title="Delete row">&#x1F5D1;&#xFE0F;</button>
@@ -2806,6 +2941,7 @@
 
       const remSel = remarkOpts.map(o => `<option value="${o}" ${r.remarks===o?'selected':''}>${o||'—'}</option>`).join('');
       const staSel = statusOpts.map(o => `<option value="${o}" ${r.status===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('');
+      const dirSel = ['EDKAM→STORE','STORE→EDKAM'].map(v => `<option value="${v}" ${(r.direction||'EDKAM→STORE')===v?'selected':''}>${v==='STORE→EDKAM'?`EDKAM owes ${r.store||'Store'}`:`${r.store||'Store'} owes EDKAM`}</option>`).join('');
       const inp = (val, cls) => `<input data-i="${i}" data-f="${cls}" value="${val}" style="${inputStyle}">`;
       const sel = (opts, cls) => `<select data-i="${i}" data-f="${cls}" style="${selStyle}">${opts}</select>`;
 
@@ -2819,6 +2955,7 @@
           <td style="padding:6px 8px;">${inp(r.unit,'unit')}</td>
           <td style="padding:6px 8px;">${sel(remSel,'remarks')}</td>
           <td style="padding:6px 8px;">${inp(r.refNumber,'refNumber')}</td>
+          <td style="padding:6px 8px;">${sel(dirSel,'direction')}</td>
           <td style="padding:6px 8px;">${sel(staSel,'status')}</td>
         </tr>`;
     }).join('');
@@ -2838,6 +2975,7 @@
               <th style="padding:10px 12px;text-align:left;">Unit</th>
               <th style="padding:10px 12px;text-align:left;">Remarks</th>
               <th style="padding:10px 12px;text-align:left;">REF #</th>
+              <th style="padding:10px 12px;text-align:left;">Direction</th>
               <th style="padding:10px 12px;text-align:left;">Status</th>
               <th style="padding:10px 12px;text-align:left;"></th>
             </tr>
@@ -3045,7 +3183,8 @@
     historyBatches.forEach((batch, i) => {
       const rows = batch.rows.map(r => [
         r.strNumber, r.date, r.store, r.product,
-        r.qty, r.unit, r.remarks, r.refNumber, r.status
+        r.qty, r.unit, r.remarks, r.refNumber,
+        r.status
       ]);
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       // Auto column widths
@@ -3126,15 +3265,103 @@
 
   // ─── PERSIST FORM INPUTS ───────────────────────────────────────────
   function saveFormInputs() {
+    const storeVal = document.getElementById("store").value;
+    // Don't save the placeholder __other__ value
+    if (storeVal === '__other__') return;
     localStorage.setItem('str_form', JSON.stringify({
       strNumber: document.getElementById("strNumber").value,
       refNumber: document.getElementById("refNumber").value,
       date:      document.getElementById("date").value,
-      store:     document.getElementById("store").value,
+      store:     storeVal,
     }));
   }
 
+  function confirmOtherStore() {
+    const val = document.getElementById('otherStoreInput').value.trim();
+    if (!val) { document.getElementById('otherStoreInput').focus(); return; }
+    const sel = document.getElementById('store');
+    let opt = sel.querySelector(`option[value="${CSS.escape(val)}"]`);
+    if (!opt) {
+      opt = document.createElement('option');
+      opt.value = val;
+      opt.textContent = val;
+      sel.insertBefore(opt, sel.querySelector('option[value="__other__"]'));
+      // Save to localStorage
+      const customs = JSON.parse(localStorage.getItem('str_custom_stores') || '[]');
+      if (!customs.includes(val)) {
+        customs.push(val);
+        localStorage.setItem('str_custom_stores', JSON.stringify(customs));
+      }
+    }
+    sel.value = val;
+    document.getElementById('otherStoreOverlay').style.display = 'none';
+    saveFormInputs();
+    updateDirectionLabels();
+  }
+
+  function cancelOtherStore() {
+    document.getElementById('otherStoreOverlay').style.display = 'none';
+    // Reset store select if nothing valid selected
+    const sel = document.getElementById('store');
+    if (sel.value === '__other__') sel.value = '';
+  }
+
+  // Listen for "Other Store..." selection
+  document.getElementById('store').addEventListener('change', function() {
+    if (this.value === '__other__') {
+      const overlay = document.getElementById('otherStoreOverlay');
+      overlay.style.display = 'flex';
+      document.getElementById('otherStoreInput').value = '';
+      setTimeout(() => document.getElementById('otherStoreInput').focus(), 100);
+    } else {
+      updateDirectionLabels();
+    }
+  });
+
+  function toggleDirDropdown() {
+    const menu = document.getElementById('dirDropdownMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function setDirection(val) {
+    document.getElementById('directionSelect').value = val;
+    document.getElementById('dirDropdownMenu').style.display = 'none';
+    updateDirectionLabels();
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    const dd = document.getElementById('dirDropdown');
+    if (dd && !dd.contains(e.target)) {
+      const menu = document.getElementById('dirDropdownMenu');
+      if (menu) menu.style.display = 'none';
+    }
+  });
+
+  function updateDirectionLabels() {
+    const store = document.getElementById('store').value || 'Store';
+    const val = document.getElementById('directionSelect').value;
+    const opt1 = document.getElementById('dirOpt1');
+    const opt2 = document.getElementById('dirOpt2');
+    const lbl  = document.getElementById('dirDropdownLabel');
+    const btn  = document.getElementById('dirDropdownBtn');
+    if (opt1) opt1.textContent = `${store} owes EDKAM`;
+    if (opt2) opt2.textContent = `EDKAM owes ${store}`;
+    if (lbl)  lbl.textContent  = val === 'STORE→EDKAM' ? `EDKAM owes ${store}` : `${store} owes EDKAM`;
+  }
+
   function restoreFormInputs() {
+    // Restore custom stores first
+    const customs = JSON.parse(localStorage.getItem('str_custom_stores') || '[]');
+    const sel = document.getElementById('store');
+    customs.forEach(name => {
+      if (!sel.querySelector(`option[value="${name}"]`)) {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        sel.insertBefore(opt, sel.querySelector('option[value="__other__"]'));
+      }
+    });
     const saved = JSON.parse(localStorage.getItem('str_form') || '{}');
     if (saved.strNumber) document.getElementById("strNumber").value = saved.strNumber;
     if (saved.refNumber) document.getElementById("refNumber").value = saved.refNumber;
@@ -3187,6 +3414,12 @@
             </select>
           </td>
           <td><input class="inline-edit ref-num-input" value="${d.refNumber || ''}" placeholder="REF #" title="Click to edit REF #" onblur="saveInlineEdit(this,'refNumber')" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit(this,'refNumber');this.blur();}" oninput="autoSaveInlineEdit(this,'refNumber')"></td>
+          <td>
+            <select class="direction-select" onchange="saveDirectionEdit(this)" style="font-size:11px;font-weight:700;border-radius:6px;border:1.5px solid #fde68a;padding:2px 4px;cursor:pointer;">
+              <option value="EDKAM→STORE" ${(d.direction||'EDKAM→STORE')==='EDKAM→STORE'?'selected':''}>${d.store||'Store'} owes EDKAM</option>
+              <option value="STORE→EDKAM" ${d.direction==='STORE→EDKAM'?'selected':''}>EDKAM owes ${d.store||'Store'}</option>
+            </select>
+          </td>
           <td>
             <select class="status-select ${d.status || 'pending'}" onchange="updateStatus(this)">
               <option value="pending"   ${d.status==='pending'?'selected':''}>🟡 Pending</option>
@@ -3397,6 +3630,197 @@
     if (productsBtn) productsBtn.style.visibility = '';
     if (historyBtn)  historyBtn.style.visibility  = '';
   }
+
+  function toggleSummary() {
+    const p = document.getElementById('summaryPanel');
+    const btn = document.getElementById('summaryBtn');
+    const isOpen = p.style.display !== 'none';
+    p.style.display = isOpen ? 'none' : 'block';
+    if (btn) btn.style.visibility = isOpen ? '' : 'hidden';
+    if (!isOpen) renderSummary();
+  }
+
+  function renderSummary() {
+    const rows = document.querySelectorAll('#strTable tbody tr:not(.empty-row)');
+    const storeMap = {};
+    rows.forEach(tr => {
+      const cells = tr.querySelectorAll('td');
+      const store  = cells[2]?.textContent.trim() || 'Unknown';
+      const dirSel = tr.querySelector('.direction-select');
+      const dir    = dirSel ? dirSel.value : 'EDKAM→STORE';
+      let status = 'pending';
+      tr.querySelectorAll('select').forEach(sel => {
+        if (['pending','returned','paid','cancelled'].includes(sel.value)) status = sel.value;
+      });
+      if (!storeMap[store]) storeMap[store] = {
+        out: { pending:0, returned:0, paid:0, cancelled:0 },
+        in:  { pending:0, returned:0, paid:0, cancelled:0 }
+      };
+      const bucket = dir === 'STORE→EDKAM' ? 'in' : 'out';
+      storeMap[store][bucket][status]++;
+    });
+
+    const body = document.getElementById('summaryBody');
+    const stores = Object.keys(storeMap);
+    if (stores.length === 0) {
+      body.innerHTML = '<div style="color:#999;text-align:center;padding:16px;" class="summary-empty">No records yet.</div>';
+      return;
+    }
+
+    const statusEmoji = { pending:'🟡', returned:'🔵', paid:'🟢', cancelled:'🔴' };
+    const statusLabel = { pending:'Pending', returned:'Returned', paid:'Paid', cancelled:'Cancelled' };
+
+    function statusLine(counts) {
+      return Object.entries(counts)
+        .filter(([,c]) => c > 0)
+        .map(([k,c]) => `<span style="margin-right:6px;">${statusEmoji[k]} ${c} ${statusLabel[k]}</span>`)
+        .join('') || '<span style="color:#aaa;font-size:11px;">None</span>';
+    }
+
+    body.innerHTML = stores.map(store => {
+      const s = storeMap[store];
+      const hasOut = Object.values(s.out).some(c => c > 0);
+      const hasIn  = Object.values(s.in).some(c => c > 0);
+      return `<div class="summary-row" style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
+        <div class="summary-store" style="font-weight:700;color:#333;margin-bottom:6px;">&#x1F3EA; ${store}</div>
+        ${hasOut ? `<div style="font-size:11px;margin-bottom:3px;"><span style="color:#b45309;font-weight:700;">📤 ${store} owes EDKAM:</span> ${statusLine(s.out)}</div>` : ''}
+        ${hasIn  ? `<div style="font-size:11px;"><span style="color:#0369a1;font-weight:700;">📥 EDKAM owes ${store}:</span> ${statusLine(s.in)}</div>` : ''}
+        ${!hasOut && !hasIn ? '<div style="color:#aaa;font-size:11px;">No items</div>' : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function toggleInventory() {
+    const p = document.getElementById('inventoryPanel');
+    const o = document.getElementById('inventoryOverlay');
+    const btn = document.getElementById('inventoryBtn');
+    const isOpen = p.style.display !== 'none';
+    p.style.display = isOpen ? 'none' : 'block';
+    o.style.display = isOpen ? 'none' : 'block';
+    if (btn) btn.style.visibility = isOpen ? '' : 'hidden';
+    if (!isOpen) renderInventory();
+  }
+
+  let inventoryStocks = {}; // { productName: stockCount }
+
+  async function loadInventoryStocks() {
+    try {
+      const snap = await db.collection('str_inventory').get();
+      snap.docs.forEach(doc => { inventoryStocks[doc.data().name] = doc.data().stock || 0; });
+    } catch(e) { console.error('Inventory load failed:', e); }
+  }
+
+  async function saveInventoryStock(name, stock) {
+    try {
+      const snap = await db.collection('str_inventory').where('name','==',name).get();
+      if (snap.empty) {
+        await db.collection('str_inventory').add({ name, stock });
+      } else {
+        await snap.docs[0].ref.update({ stock });
+      }
+      inventoryStocks[name] = stock;
+    } catch(e) { console.error('Inventory save failed:', e); }
+  }
+
+  function getSentOut(productName) {
+    return getInventoryStats(productName).pending;
+  }
+
+  function getInventoryStats(productName) {
+    let sent = 0, pending = 0, edkamOwes = 0;
+    document.querySelectorAll('#strTable tbody tr:not(.empty-row)').forEach(tr => {
+      const cells = tr.querySelectorAll('td');
+      const prod = cells[3]?.textContent.trim();
+      const qty  = parseInt(cells[4]?.textContent.trim()) || 0;
+      const dir  = tr.querySelector('.direction-select')?.value || 'EDKAM→STORE';
+      let status = 'pending';
+      tr.querySelectorAll('select').forEach(sel => {
+        if (['pending','returned','paid','cancelled'].includes(sel.value)) status = sel.value;
+      });
+      if (prod !== productName) return;
+      if (dir === 'EDKAM→STORE') {
+        if (status !== 'cancelled') sent += qty;
+        if (status === 'pending')   pending += qty;
+      } else if (dir === 'STORE→EDKAM') {
+        // Store sent to EDKAM — if still pending, EDKAM needs to return it
+        if (status === 'pending') edkamOwes += qty;
+      }
+    });
+    return { sent, pending, edkamOwes };
+  }
+
+  function renderInventory() {
+    const body = document.getElementById('inventoryBody');
+    if (!productItems || productItems.length === 0) {
+      body.innerHTML = '<div style="color:#999;text-align:center;padding:16px;">No products yet. Add products first.</div>';
+      return;
+    }
+
+    // Header row
+    let html = `<div style="display:grid;grid-template-columns:1fr 60px 60px 60px 60px;gap:4px;padding:4px 0 8px;border-bottom:2px solid #fde68a;font-weight:700;font-size:11px;color:#b45309;text-transform:uppercase;">
+      <div>Product</div>
+      <div style="text-align:center;">Stock</div>
+      <div style="text-align:center;">Sent</div>
+      <div style="text-align:center;">EDKAM Owes</div>
+      <div style="text-align:center;">Left</div>
+    </div>`;
+
+    productItems.forEach(p => {
+      const stock  = inventoryStocks[p.name] || 0;
+      const stats  = getInventoryStats(p.name);
+      const left   = stock - stats.pending;
+      const leftColor = left < 0 ? '#dc2626' : left <= 5 ? '#f59e0b' : '#16a34a';
+      const owesColor = stats.edkamOwes > 0 ? '#dc2626' : '#16a34a';
+
+      html += `<div class="inv-row" style="display:grid;grid-template-columns:1fr 60px 60px 60px 60px;gap:4px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f0f0;">
+        <div class="inv-name" style="font-size:12px;color:#333;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.name}">${p.name}</div>
+        <div style="text-align:center;">
+          <input class="inv-stock-input" type="number" min="0" value="${stock}"
+            style="width:52px;padding:3px 4px;border:1.5px solid #fde68a;border-radius:6px;font-size:12px;text-align:center;background:#fffbeb;color:#333;"
+            onchange="saveInventoryStock('${p.name.replace(/'/g,"\\'")}', parseInt(this.value)||0).then(()=>renderInventory())"
+            onclick="this.select()">
+        </div>
+        <div style="text-align:center;font-size:12px;color:#555;">${stats.sent}</div>
+        <div style="text-align:center;font-size:13px;font-weight:700;color:${owesColor};">${stats.edkamOwes}</div>
+        <div style="text-align:center;font-size:13px;font-weight:700;color:${leftColor};">${left}</div>
+      </div>`;
+    });
+
+    body.innerHTML = html;
+  }
+
+  // ── INVENTORY DRAG removed — now a fixed modal ─────────────────────
+  (function() {
+    const handle = document.getElementById('summaryDragHandle');
+    const panel  = document.getElementById('summaryPanel');
+    let dragging = false, startX, startY, origLeft, origTop;
+
+    function getPos() { const r = panel.getBoundingClientRect(); return { left: r.left, top: r.top }; }
+    function startDrag(cx, cy) {
+      dragging = true;
+      const pos = getPos();
+      panel.style.right = 'auto';
+      panel.style.left  = pos.left + 'px';
+      panel.style.top   = pos.top  + 'px';
+      startX = cx; startY = cy;
+      origLeft = pos.left; origTop = pos.top;
+      handle.style.cursor = 'grabbing';
+    }
+    function moveDrag(cx, cy) {
+      if (!dragging) return;
+      const dx = cx - startX, dy = cy - startY;
+      panel.style.left = Math.max(0, Math.min(window.innerWidth  - panel.offsetWidth,  origLeft + dx)) + 'px';
+      panel.style.top  = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, origTop  + dy)) + 'px';
+    }
+    function endDrag() { dragging = false; handle.style.cursor = 'grab'; }
+
+    handle.addEventListener('mousedown',  e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+    document.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
+    document.addEventListener('mouseup',   endDrag);
+    handle.addEventListener('touchstart', e => { const t = e.touches[0]; startDrag(t.clientX, t.clientY); }, { passive: true });
+    document.addEventListener('touchmove', e => { if (!dragging) return; e.preventDefault(); const t = e.touches[0]; moveDrag(t.clientX, t.clientY); }, { passive: false });
+    document.addEventListener('touchend',  endDrag);
+  })();
 
   // ── CALC DRAG ──────────────────────────────────────────────────────
   (function() {
