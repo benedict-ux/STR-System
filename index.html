@@ -2162,7 +2162,7 @@
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><input class="inline-edit str-num-input" value="${strNumber}" placeholder="STR #" title="Click to edit STR #" onblur="saveInlineEdit(this,'strNumber')" onkeydown="if(event.key==='Enter')this.blur()" oninput="updateMissingBadge()"></td>
+          <td><input class="inline-edit str-num-input" value="${strNumber}" placeholder="STR #" title="Click to edit STR #" onblur="saveInlineEdit(this,'strNumber')" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit(this,'strNumber');this.blur();}" oninput="autoSaveInlineEdit(this,'strNumber')"></td>
           <td>${date}</td>
           <td>${store}</td>
           <td>${product}</td>
@@ -2177,7 +2177,7 @@
               <option value="SAFE KEEP" ${remarks==='SAFE KEEP'?'selected':''}>SAFE KEEP</option>
             </select>
           </td>
-          <td><input class="inline-edit ref-num-input" value="${refNumber}" placeholder="REF #" title="Click to edit REF #" onblur="saveInlineEdit(this,'refNumber')" onkeydown="if(event.key==='Enter')this.blur()" oninput="updateMissingBadge()"></td>
+          <td><input class="inline-edit ref-num-input" value="${refNumber}" placeholder="REF #" title="Click to edit REF #" onblur="saveInlineEdit(this,'refNumber')" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit(this,'refNumber');this.blur();}" oninput="autoSaveInlineEdit(this,'refNumber')"></td>
           <td>
             <select class="status-select pending" onchange="updateStatus(this)">
               <option value="pending"   selected>🟡 Pending</option>
@@ -2244,6 +2244,26 @@
   let missingStrFilterActive = false;
   let missingRefFilterActive = false;
 
+  // Debounced auto-save for inline edits (only when erasing to empty)
+  let autoSaveTimers = new Map();
+  function autoSaveInlineEdit(input, field) {
+    const key = input.closest('tr')?.dataset.docId + '_' + field;
+    if (autoSaveTimers.has(key)) {
+      clearTimeout(autoSaveTimers.get(key));
+    }
+    
+    // Only auto-save if the value is empty (erased)
+    if (!input.value.trim()) {
+      const timer = setTimeout(() => {
+        saveInlineEdit(input, field);
+        autoSaveTimers.delete(key);
+      }, 300);
+      autoSaveTimers.set(key, timer);
+    }
+    
+    updateMissingBadge();
+  }
+
   function updatePendingBadge() {
     const pending = document.querySelectorAll('#strTable tbody .status-select.pending').length;
     const badge = document.getElementById('pendingBadge');
@@ -2253,7 +2273,8 @@
       badge.classList.toggle('active', pendingFilterActive);
     } else {
       badge.style.display = 'none';
-      if (pendingFilterActive) pendingFilterActive = false;
+      badge.classList.remove('active');
+      // Don't clear the flag here - let updateStatus handle it
     }
     updateMissingBadge();
   }
@@ -2273,7 +2294,8 @@
       strBadge.classList.toggle('active', missingStrFilterActive);
     } else {
       strBadge.style.display = 'none';
-      if (missingStrFilterActive) missingStrFilterActive = false;
+      strBadge.classList.remove('active');
+      // Don't clear the flag here - let saveInlineEdit handle it
     }
 
     const refBadge = document.getElementById('missingRefBadge');
@@ -2283,7 +2305,8 @@
       refBadge.classList.toggle('active', missingRefFilterActive);
     } else {
       refBadge.style.display = 'none';
-      if (missingRefFilterActive) missingRefFilterActive = false;
+      refBadge.classList.remove('active');
+      // Don't clear the flag here - let saveInlineEdit handle it
     }
   }
 
@@ -2338,15 +2361,16 @@
     }
     updatePendingBadge();
     if (pendingFilterActive) {
-      // Hide this row if it's no longer pending
-      if (sel.value !== 'pending') tr.style.display = 'none';
-      // Check if any pending rows remain
-      const pendingLeft = document.querySelectorAll('#strTable tbody .status-select.pending').length;
-      if (pendingLeft === 0) {
-        // No more pending — turn off filter and show everything
-        pendingFilterActive = false;
-        document.querySelectorAll('#strTable tbody tr:not(.empty-row)').forEach(r => r.style.display = '');
-        updatePendingBadge();
+      if (sel.value !== 'pending') {
+        tr.style.display = 'none';
+        // Check only visible rows still pending
+        const remaining = [...document.querySelectorAll('#strTable tbody tr:not(.empty-row)')]
+          .filter(r => r.style.display !== 'none' && r.querySelector('.status-select.pending'));
+        if (remaining.length === 0) {
+          pendingFilterActive = false;
+          document.querySelectorAll('#strTable tbody tr:not(.empty-row)').forEach(r => r.style.display = '');
+          updatePendingBadge();
+        }
       }
     }
   }
@@ -2358,6 +2382,10 @@
   }
 
   function saveInlineEdit(input, field) {
+    console.log('=== saveInlineEdit START ===');
+    console.log('Field:', field, 'Value:', input.value);
+    console.log('Filter active - STR:', missingStrFilterActive, 'REF:', missingRefFilterActive);
+    
     const tr = input.closest('tr');
     const docId = tr && tr.dataset.docId;
     if (docId) {
@@ -2366,33 +2394,59 @@
         .catch(err => console.error('Inline save failed:', err));
     }
 
-    if (missingStrFilterActive && field === 'strNumber') {
-      if (input.value.trim()) {
-        tr.style.display = 'none';
-        // Check if any rows still missing STR#
-        const stillMissing = [...document.querySelectorAll('#strTable tbody tr:not(.empty-row)')]
-          .filter(r => !r.querySelector('.str-num-input')?.value.trim()).length;
-        if (stillMissing === 0) {
+    setTimeout(() => {
+      const allRows = [...document.querySelectorAll('#strTable tbody tr:not(.empty-row)')];
+      console.log('Total rows found:', allRows.length);
+
+      if (field === 'strNumber' && missingStrFilterActive) {
+        console.log('Processing STR# filter...');
+        const stillMissing = allRows.filter(r => !r.querySelector('.str-num-input')?.value.trim());
+        console.log('Rows still missing STR#:', stillMissing.length);
+        
+        if (stillMissing.length === 0) {
+          console.log('ALL FILLED! Clearing filter and showing all rows...');
           missingStrFilterActive = false;
-          document.querySelectorAll('#strTable tbody tr:not(.empty-row)').forEach(r => r.style.display = '');
+          allRows.forEach(r => {
+            console.log('Setting row display to empty string');
+            r.style.display = '';
+          });
+        } else {
+          console.log('Re-applying filter (hide filled, show unfilled)...');
+          allRows.forEach(r => {
+            const val = r.querySelector('.str-num-input')?.value.trim();
+            r.style.display = val ? 'none' : '';
+            console.log('Row STR#:', val, '-> display:', r.style.display);
+          });
         }
       }
-    }
 
-    if (missingRefFilterActive && field === 'refNumber') {
-      if (input.value.trim()) {
-        tr.style.display = 'none';
-        // Check if any rows still missing REF#
-        const stillMissing = [...document.querySelectorAll('#strTable tbody tr:not(.empty-row)')]
-          .filter(r => !r.querySelector('.ref-num-input')?.value.trim()).length;
-        if (stillMissing === 0) {
+      if (field === 'refNumber' && missingRefFilterActive) {
+        console.log('Processing REF# filter...');
+        const stillMissing = allRows.filter(r => !r.querySelector('.ref-num-input')?.value.trim());
+        console.log('Rows still missing REF#:', stillMissing.length);
+        
+        if (stillMissing.length === 0) {
+          console.log('ALL FILLED! Clearing filter and showing all rows...');
           missingRefFilterActive = false;
-          document.querySelectorAll('#strTable tbody tr:not(.empty-row)').forEach(r => r.style.display = '');
+          allRows.forEach(r => {
+            console.log('Setting row display to empty string');
+            r.style.display = '';
+          });
+        } else {
+          console.log('Re-applying filter (hide filled, show unfilled)...');
+          allRows.forEach(r => {
+            const val = r.querySelector('.ref-num-input')?.value.trim();
+            r.style.display = val ? 'none' : '';
+            console.log('Row REF#:', val, '-> display:', r.style.display);
+          });
         }
       }
-    }
 
-    updateMissingBadge();
+      console.log('Calling updateMissingBadge...');
+      updateMissingBadge();
+      updatePendingBadge();
+      console.log('=== saveInlineEdit END ===');
+    }, 50);
   }
 
   function deleteRow(btn) {
@@ -3117,7 +3171,7 @@
         const tr = document.createElement("tr");
         tr.dataset.docId = doc.id;
         tr.innerHTML = `
-          <td><input class="inline-edit str-num-input" value="${d.strNumber || ''}" placeholder="STR #" title="Click to edit STR #" onblur="saveInlineEdit(this,'strNumber')" onkeydown="if(event.key==='Enter')this.blur()" oninput="updateMissingBadge()"></td>
+          <td><input class="inline-edit str-num-input" value="${d.strNumber || ''}" placeholder="STR #" title="Click to edit STR #" onblur="saveInlineEdit(this,'strNumber')" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit(this,'strNumber');this.blur();}" oninput="autoSaveInlineEdit(this,'strNumber')"></td>
           <td>${d.date || ''}</td>
           <td>${d.store || ''}</td>
           <td>${d.product || ''}</td>
@@ -3132,7 +3186,7 @@
               <option value="SAFE KEEP" ${d.remarks==='SAFE KEEP'?'selected':''}>SAFE KEEP</option>
             </select>
           </td>
-          <td><input class="inline-edit ref-num-input" value="${d.refNumber || ''}" placeholder="REF #" title="Click to edit REF #" onblur="saveInlineEdit(this,'refNumber')" onkeydown="if(event.key==='Enter')this.blur()" oninput="updateMissingBadge()"></td>
+          <td><input class="inline-edit ref-num-input" value="${d.refNumber || ''}" placeholder="REF #" title="Click to edit REF #" onblur="saveInlineEdit(this,'refNumber')" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit(this,'refNumber');this.blur();}" oninput="autoSaveInlineEdit(this,'refNumber')"></td>
           <td>
             <select class="status-select ${d.status || 'pending'}" onchange="updateStatus(this)">
               <option value="pending"   ${d.status==='pending'?'selected':''}>🟡 Pending</option>
