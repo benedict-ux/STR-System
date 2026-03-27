@@ -1,4 +1,4 @@
-const CACHE_NAME = 'str-system-v70';
+const CACHE_NAME = 'str-system-v75';
 const ASSETS = [
   '/index.html',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
