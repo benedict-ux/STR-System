@@ -2347,8 +2347,11 @@
     const tbody = document.querySelector('#strTable tbody');
     const rows = Array.from(tbody.querySelectorAll('tr:not(.empty-row)'));
     if (rows.length < 2) return;
-    // Sort newest date first; same date keeps insertion order (stable)
+    // Sort by STR# numerically ascending, then by date ascending
     rows.sort((a, b) => {
+      const strA = parseInt(a.querySelector('.str-num-input')?.value.trim()) || 0;
+      const strB = parseInt(b.querySelector('.str-num-input')?.value.trim()) || 0;
+      if (strA !== strB) return strA - strB;
       const da = a.querySelectorAll('td')[1]?.textContent || '';
       const db = b.querySelectorAll('td')[1]?.textContent || '';
       return da.localeCompare(db);
