@@ -1284,6 +1284,8 @@
   body.dark #otherStoreModal { background: #1e1e1e !important; }
   body.dark #otherStoreModal div[style*="color:#666"] { color: #999 !important; }
   body.dark #otherStoreInput { background: #2a2a2a !important; border-color: #444 !important; color: #fff !important; }
+  body.dark #strSearchInput { background: #2a2a2a !important; border-color: #444 !important; color: #ccc !important; box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; }
+  body.dark #strSearchInput::placeholder { color: #666 !important; }
   /* Modals */
   body.dark .compile-overlay, body.dark .picker-overlay { background: rgba(0,0,0,0.75); }
   body.dark .compile-modal, body.dark .picker-modal { background: #1e1e1e; }
@@ -1522,6 +1524,13 @@
   </div>
 
   <div class="table-section">
+    <div style="padding:0 0 10px;position:relative;display:flex;align-items:center;">
+      <span style="position:absolute;left:14px;font-size:14px;pointer-events:none;line-height:1;">🔍</span>
+      <input id="strSearchInput" type="text" placeholder="Search store, product, STR#, REF#..." oninput="filterSTRTable()"
+        style="width:100%;padding:9px 16px 9px 38px;border:1.5px solid #fde68a;border-radius:24px;font-size:13px;background:#fffbeb;color:#333;outline:none;box-sizing:border-box;box-shadow:0 2px 8px rgba(180,83,9,0.08);transition:border-color 0.2s,box-shadow 0.2s;"
+        onfocus="this.style.borderColor='#b45309';this.style.boxShadow='0 2px 12px rgba(180,83,9,0.18)'"
+        onblur="this.style.borderColor='#fde68a';this.style.boxShadow='0 2px 8px rgba(180,83,9,0.08)'">
+    </div>
     <div class="table-actions">
       <div class="section-title" style="margin:0;padding:0;border:none;line-height:2;">STR Records <span id="pendingBadge" class="str-badge badge-pending" style="display:none;" onclick="togglePendingFilter()" title="Click to filter pending records"></span><span id="missingStrBadge" class="str-badge badge-str" style="display:none;" onclick="toggleMissingStrFilter()" title="Click to filter records missing STR#"></span><span id="missingRefBadge" class="str-badge badge-ref" style="display:none;" onclick="toggleMissingRefFilter()" title="Click to filter records missing REF#"></span></div>
       <div style="margin-left:auto;display:flex;gap:10px;">
@@ -2425,6 +2434,32 @@
       refBadge.style.display = 'none';
       refBadge.classList.remove('active');
       // Don't clear the flag here - let saveInlineEdit handle it
+    }
+  }
+
+  function filterSTRTable() {
+    const q = document.getElementById('strSearchInput').value.trim().toLowerCase();
+    const tbody = document.querySelector('#strTable tbody');
+    let visibleCount = 0;
+
+    document.querySelectorAll('#strTable tbody tr:not(.empty-row):not(.search-empty-row)').forEach(tr => {
+      if (!q) { tr.style.display = ''; visibleCount++; return; }
+      const text = tr.textContent.toLowerCase();
+      const show = text.includes(q);
+      tr.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
+    });
+
+    // Remove old search-empty-row if exists
+    const existing = tbody.querySelector('.search-empty-row');
+    if (existing) existing.remove();
+
+    // Show "no records found" if search has no results
+    if (q && visibleCount === 0) {
+      const emptyRow = document.createElement('tr');
+      emptyRow.className = 'search-empty-row empty-row';
+      emptyRow.innerHTML = `<td colspan="11" style="text-align:center;padding:20px;color:#999;">No records found for "<strong>${q}</strong>"</td>`;
+      tbody.appendChild(emptyRow);
     }
   }
 
