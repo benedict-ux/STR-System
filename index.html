@@ -598,8 +598,12 @@
 
   thead tr { background: #b45309; color: white; }
   thead th {
+    position: sticky; top: 0; z-index: 10;
     padding: 10px 10px; text-align: left;
     font-weight: 600; font-size: 12px; letter-spacing: 0.3px;
+    background: #b45309;
+  }
+  #strTable { width: calc(100% + 17px); }
     white-space: nowrap;
   }
 
@@ -636,6 +640,14 @@
   body.dark .badge-str.active     { background: #555; color: #fff; }
   body.dark .badge-ref            { background: #333; color: #e5e5e5; }
   body.dark .badge-ref.active     { background: #555; color: #fff; }
+  /* Styled scrollbars for strScrollArea — both visible, thin and styled */
+  #strScrollArea::-webkit-scrollbar { width: 4px; height: 4px; }
+  #strScrollArea::-webkit-scrollbar-track { background: transparent; }
+  #strScrollArea::-webkit-scrollbar-thumb { background: #fde68a; border-radius: 99px; }
+  #strScrollArea::-webkit-scrollbar-thumb:hover { background: #b45309; }
+  #strScrollArea { scrollbar-width: thin; scrollbar-color: #fde68a transparent; }
+  body.dark #strScrollArea::-webkit-scrollbar-thumb { background: #444; }
+  body.dark #strScrollArea { scrollbar-color: #444 transparent; }
   .inline-edit {
     background: transparent;
     border: none;
@@ -1245,7 +1257,7 @@
   body.dark .section-title { color: #ccc; border-color: #2a2a2a; }
   body.dark table { color: #ccc; }
   body.dark thead tr { background: #2a2a2a; }
-  body.dark thead th { color: #ccc; }
+  body.dark thead th { color: #ccc; background: #2a2a2a; }
   body.dark tbody tr { border-color: #2a2a2a; }
   body.dark tbody tr:hover { background: #242424; }
   body.dark tbody td { color: #bbb; }
@@ -1537,7 +1549,8 @@
         <button class="send-history-btn" id="sendHistoryBtn" onclick="sendToHistory()">&#x1F4DA; Send to Archived</button>
       </div>
     </div>
-    <div id="strPrintArea" style="overflow-x:auto; border-radius:10px; border:1px solid #fde68a;">
+    <div id="strPrintArea" style="border-radius:10px;border:1px solid #fde68a;overflow:hidden;">
+      <div id="strScrollArea" style="overflow-x:auto;overflow-y:scroll;max-height:70vh;margin-right:-17px;">
     <table id="strTable">
       <thead>
         <tr>
@@ -1558,6 +1571,7 @@
         <tr class="empty-row"><td colspan="10">No records yet. Generate an STR to get started.</td></tr>
       </tbody>
     </table>
+    </div>
     </div>
     <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
       <button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
@@ -2444,8 +2458,17 @@
 
     document.querySelectorAll('#strTable tbody tr:not(.empty-row):not(.search-empty-row)').forEach(tr => {
       if (!q) { tr.style.display = ''; visibleCount++; return; }
-      const text = tr.textContent.toLowerCase();
-      const show = text.includes(q);
+      const cells = tr.querySelectorAll('td');
+      const strNum  = cells[0]?.querySelector('input')?.value || '';
+      const date    = cells[1]?.textContent || '';
+      const store   = cells[2]?.textContent || '';
+      const product = cells[3]?.textContent || '';
+      const qty     = cells[4]?.textContent || '';
+      const unit    = cells[5]?.textContent || '';
+      const remarks = cells[6]?.querySelector('select')?.value || '';
+      const refNum  = cells[7]?.querySelector('input')?.value || '';
+      const combined = [strNum, date, store, product, qty, unit, remarks, refNum].join(' ').toLowerCase();
+      const show = combined.includes(q);
       tr.style.display = show ? '' : 'none';
       if (show) visibleCount++;
     });
@@ -2636,8 +2659,15 @@
 
   // ─── COMPILE & SEND TO HISTORY ────────────────────────────────────
   function printSTRRecords() {
-    const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
+    // Only print visible rows (respects search/filter)
+    const rows = [...document.querySelectorAll("#strTable tbody tr:not(.empty-row)")]
+      .filter(r => r.style.display !== 'none');
     if (rows.length === 0) { showToast("No records to print.", true); return; }
+
+    function toTitleCase(str) {
+      return (str||'').replace(/\S+/g, w => /^\d/.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .replace(/\bJb\b/g, 'Jollibee');
+    }
 
     let rowsHtml = '';
     rows.forEach(function(tr) {
@@ -2648,8 +2678,8 @@
       rowsHtml += '<tr>'
         + '<td>' + cellVal(cells[0]) + '</td>'
         + '<td>' + cells[1].textContent + '</td>'
-        + '<td>' + cells[2].textContent + '</td>'
-        + '<td>' + cells[3].textContent + '</td>'
+        + '<td>' + toTitleCase(cells[2].textContent.trim()) + '</td>'
+        + '<td>' + toTitleCase(cells[3].textContent.trim()) + '</td>'
         + '<td>' + cells[4].textContent + '</td>'
         + '<td>' + cells[5].textContent + '</td>'
         + '<td>' + remarks + '</td>'
@@ -2716,7 +2746,8 @@
   }
 
   function showCompileModal() {
-    const rows = document.querySelectorAll("#strTable tbody tr:not(.empty-row)");
+    const rows = [...document.querySelectorAll("#strTable tbody tr:not(.empty-row)")]
+      .filter(r => r.style.display !== 'none');
     if (rows.length === 0) { showToast("No records to compile.", true); return; }
 
     const isDark = document.body.classList.contains('dark');
@@ -3168,14 +3199,19 @@
     const batch = historyBatches[currentViewBatchIndex];
     if (!batch) return;
 
+    function toTitleCase(str) {
+      return (str||'').replace(/\S+/g, w => /^\d/.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .replace(/\bJb\b/g, 'Jollibee');
+    }
+
     let rowsHtml = '';
     batch.rows.forEach(function(r) {
       const status = r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : '';
       rowsHtml += '<tr>'
         + '<td>' + r.strNumber + '</td>'
         + '<td>' + r.date + '</td>'
-        + '<td>' + r.store + '</td>'
-        + '<td>' + r.product + '</td>'
+        + '<td>' + toTitleCase(r.store) + '</td>'
+        + '<td>' + toTitleCase(r.product) + '</td>'
         + '<td>' + r.qty + '</td>'
         + '<td>' + r.unit + '</td>'
         + '<td>' + r.remarks + '</td>'
