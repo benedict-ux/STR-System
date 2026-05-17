@@ -1926,6 +1926,60 @@
   let productItems = [];
   let _pickerTargetRow = null;
   const historyBatches = JSON.parse(localStorage.getItem('str_history') || '[]');
+
+  async function loadBatchesFromFirestore() {
+    try {
+      // First try str_batches collection
+      const snap = await db.collection('str_batches').orderBy('createdAt', 'asc').get();
+      if (!snap.empty) {
+        if (historyBatches.length === 0) {
+          snap.docs.forEach(doc => {
+            const d = doc.data();
+            historyBatches.push({ sentAt: d.sentAt, rows: d.rows || [], firestoreId: doc.id });
+          });
+          localStorage.setItem('str_history', JSON.stringify(historyBatches));
+          renderHistory();
+        }
+        return;
+      }
+      // Fallback: recover archived records from str_records
+      const archivedSnap = await db.collection('str_records').where('archived', '==', true).get();
+      if (archivedSnap.empty) return;
+      if (historyBatches.length > 0) return;
+      // Group by date
+      const byDate = {};
+      archivedSnap.docs.forEach(doc => {
+        const d = doc.data();
+        const date = d.date || 'Unknown Date';
+        if (!byDate[date]) byDate[date] = [];
+        byDate[date].push({
+          docId: doc.id,
+          strNumber: d.strNumber || '',
+          date: d.date || '',
+          store: d.store || '',
+          product: d.product || '',
+          qty: d.qty || '',
+          unit: d.unit || '',
+          remarks: d.remarks || '',
+          refNumber: d.refNumber || '',
+          direction: d.direction || 'EDKAM→STORE',
+          status: d.status || 'pending'
+        });
+      });
+      // Create one batch per date
+      for (const [date, rows] of Object.entries(byDate).sort()) {
+        const batch = { sentAt: date, rows };
+        historyBatches.push(batch);
+        db.collection('str_batches').add({
+          sentAt: batch.sentAt,
+          rows: batch.rows,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(docRef => { batch.firestoreId = docRef.id; });
+      }
+      localStorage.setItem('str_history', JSON.stringify(historyBatches));
+      renderHistory();
+    } catch(e) { console.error('Batch load failed:', e); }
+  }
   let pendingFilterActive = false;
   let pendingRenameBatch = null;
 
@@ -2035,6 +2089,7 @@
     loadProductsFromFirestore();
     loadInventoryStocks();
     loadRecordsFromFirestore();
+    loadBatchesFromFirestore();
     renderHistory();
     addItem();
   }
@@ -2878,6 +2933,15 @@
 
     historyBatches.push(batch);
     localStorage.setItem('str_history', JSON.stringify(historyBatches));
+    // Also save to Firestore for persistence across devices
+    db.collection('str_batches').add({
+      sentAt: batch.sentAt,
+      rows: batch.rows,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(docRef => {
+      batch.firestoreId = docRef.id;
+      localStorage.setItem('str_history', JSON.stringify(historyBatches));
+    }).catch(err => console.error('Batch save failed:', err));
     renderHistory();
 
     const tbody = document.querySelector("#strTable tbody");
@@ -3304,8 +3368,7 @@
 
     historyBatches.length = 0;
     localStorage.removeItem('str_history');
-    renderHistory();
-    showToast("All archived records cleared.");
+    renderHistory();    showToast("All archived records cleared.");
   }
 
   function toggleSidebar() {
