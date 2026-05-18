@@ -1935,7 +1935,8 @@
         if (historyBatches.length === 0) {
           snap.docs.forEach(doc => {
             const d = doc.data();
-            historyBatches.push({ sentAt: d.sentAt, rows: d.rows || [], firestoreId: doc.id });
+            const rows = (d.rows || []).sort((a, b) => (parseInt(a.strNumber)||0) - (parseInt(b.strNumber)||0));
+            historyBatches.push({ sentAt: d.sentAt, rows, firestoreId: doc.id });
           });
           localStorage.setItem('str_history', JSON.stringify(historyBatches));
           renderHistory();
@@ -1966,8 +1967,13 @@
           status: d.status || 'pending'
         });
       });
-      // Create one batch per date
+      // Create one batch per date, rows sorted by STR number
       for (const [date, rows] of Object.entries(byDate).sort()) {
+        rows.sort((a, b) => {
+          const na = parseInt(a.strNumber) || 0;
+          const nb = parseInt(b.strNumber) || 0;
+          return na - nb;
+        });
         const batch = { sentAt: date, rows };
         historyBatches.push(batch);
         db.collection('str_batches').add({
@@ -3054,7 +3060,11 @@
       ? 'padding:4px 6px;border:1.5px solid #3a3a3a;border-radius:6px;font-size:12px;background:#2a2a2a;color:#ddd;'
       : 'padding:4px 6px;border:1.5px solid #fde68a;border-radius:6px;font-size:12px;';
 
-    const rows = batch.rows.map((r, i) => {
+    const rows = [...batch.rows].sort((a, b) => {
+      const na = parseInt(a.strNumber) || 0;
+      const nb = parseInt(b.strNumber) || 0;
+      return na - nb;
+    }).map((r, i) => {
       const dirLabel = (r.direction||'EDKAM→STORE') === 'STORE→EDKAM' ? `EDKAM owes ${r.store||'Store'}` : `${r.store||'Store'} owes EDKAM`;
       if (!editable) return `
         <tr style="border-bottom:1px solid ${borderColor};">
@@ -3268,8 +3278,11 @@
         .replace(/\bJb\b/g, 'Jollibee');
     }
 
+    // Sort rows by STR number
+    const sortedRows = [...batch.rows].sort((a, b) => (parseInt(a.strNumber)||0) - (parseInt(b.strNumber)||0));
+
     let rowsHtml = '';
-    batch.rows.forEach(function(r) {
+    sortedRows.forEach(function(r) {
       const status = r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : '';
       rowsHtml += '<tr>'
         + '<td>' + r.strNumber + '</td>'
